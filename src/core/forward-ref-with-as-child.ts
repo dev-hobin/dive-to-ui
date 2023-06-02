@@ -4,6 +4,13 @@ import { Assign } from '@/types'
 type AsChildProp = {
   asChild?: boolean
 }
+export type AsChildForwardRefExoticComponent<
+  E extends React.ElementType,
+  P = {},
+> = React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<Assign<React.ComponentProps<E>, P & AsChildProp>> &
+    React.RefAttributes<React.ElementRef<E>>
+>
 
 /**
  * forwardRef 기능과 함께 컴포넌트에 asChild prop을 추가시킨다.
