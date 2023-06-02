@@ -2,9 +2,9 @@ import React from 'react'
 import {
   AsChildForwardRefExoticComponent,
   forwardRefWithAsChild,
-} from './forward-ref-with-as-child'
-import { composeRefs } from './compose-refs'
-import { mergeProps } from './merge-props'
+} from './utils/forward-ref-with-as-child'
+import { composeRefs } from './utils/compose-refs'
+import { mergeProps } from './utils/merge-props'
 
 type Divers = { [E in (typeof NODES)[number]]: AsChildForwardRefExoticComponent<E> }
 
