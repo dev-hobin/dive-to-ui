@@ -5,6 +5,9 @@ type AsChildProp = {
   asChild?: boolean
 }
 
+/**
+ * forwardRef 기능과 함께 컴포넌트에 asChild prop을 추가시킨다.
+ */
 export const forwardRefWithAsChild = <E extends React.ElementType, P = {}>(
   component: React.ForwardRefRenderFunction<
     React.ElementRef<E>,
