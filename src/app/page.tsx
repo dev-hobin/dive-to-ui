@@ -1,3 +1,9 @@
+import { Checkbox } from '@/component/checkbox/checkbox'
+
 export default function Home() {
-  return <main>안녕하세요</main>
+  return (
+    <main>
+      <Checkbox />
+    </main>
+  )
 }
