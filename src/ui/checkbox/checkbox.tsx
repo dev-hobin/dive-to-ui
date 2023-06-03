@@ -10,6 +10,8 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
     input: {
       isDisabled: props.disabled,
       isRequired: props.required,
+      name: props.name,
+      value: props.value,
     },
   })
 

@@ -24,6 +24,9 @@ export const machine = createMachine(
       SET_REQUIRED: {
         actions: 'setIsRequired',
       },
+      SET_INDETERMINATE: {
+        actions: 'setIsIndeterminate',
+      },
     },
     types: {
       context: {} as {
@@ -32,13 +35,17 @@ export const machine = createMachine(
         isActive: boolean
         isDisabled: boolean
         isRequired: boolean
+        isIndeterminate: boolean
+        name?: string
+        value: string | number | readonly string[]
       },
       events: {} as
         | { type: 'SET_HOVERED'; value: boolean }
         | { type: 'SET_ACTIVE'; value: boolean }
         | { type: 'SET_FOCUSED'; value: boolean }
         | { type: 'SET_DISABLED'; value: boolean }
-        | { type: 'SET_REQUIRED'; value: boolean },
+        | { type: 'SET_REQUIRED'; value: boolean }
+        | { type: 'SET_INDETERMINATE'; value: boolean },
     },
     context: ({ input }) => ({
       isHovered: input.isHovered ?? false,
@@ -46,6 +53,9 @@ export const machine = createMachine(
       isActive: input.isActive ?? false,
       isDisabled: input.isDisabled ?? false,
       isRequired: input.isRequired ?? false,
+      isIndeterminate: input.isIndeterminate ?? false,
+      name: input.name,
+      value: input.value ?? 'on',
     }),
   },
   {
@@ -78,6 +88,12 @@ export const machine = createMachine(
         if (event.type !== 'SET_REQUIRED') throw `잘못된 이벤트 타입입니다 - ${event.type}`
         return {
           isRequired: event.value,
+        }
+      }),
+      setIsIndeterminate: assign(({ event }) => {
+        if (event.type !== 'SET_INDETERMINATE') throw `잘못된 이벤트 타입입니다 - ${event.type}`
+        return {
+          isIndeterminate: event.value,
         }
       }),
     },
