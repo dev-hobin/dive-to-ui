@@ -1,13 +1,36 @@
-import { assign, createMachine, not } from 'xstate'
+import { and, assign, createMachine, not } from 'xstate'
 
 export const machine = createMachine(
   {
     id: 'Checkbox',
-    initial: 'idle',
+    initial: 'unchecked',
     states: {
-      idle: {},
+      checked: {
+        on: {
+          CHECK: {
+            target: 'unchecked',
+            guard: and([not('isIndeterminate'), not('isDisabled')]),
+          },
+        },
+      },
+      unchecked: {
+        on: {
+          CHECK: {
+            target: 'checked',
+            guard: and([not('isIndeterminate'), not('isDisabled')]),
+          },
+        },
+      },
     },
     on: {
+      SET_CHECKED: {
+        target: '.checked',
+        guard: and([not('isIndeterminate'), not('isDisabled')]),
+      },
+      SET_UNCHECKED: {
+        target: '.unchecked',
+        guard: and([not('isIndeterminate'), not('isDisabled')]),
+      },
       SET_HOVERED: {
         actions: 'setIsHovered',
       },
@@ -40,6 +63,9 @@ export const machine = createMachine(
         value: string | number | readonly string[]
       },
       events: {} as
+        | { type: 'CHECK' }
+        | { type: 'SET_CHECKED' }
+        | { type: 'SET_UNCHECKED' }
         | { type: 'SET_HOVERED'; value: boolean }
         | { type: 'SET_ACTIVE'; value: boolean }
         | { type: 'SET_FOCUSED'; value: boolean }
@@ -96,6 +122,12 @@ export const machine = createMachine(
           isIndeterminate: event.value,
         }
       }),
+    },
+    guards: {
+      isDisabled: ({ context }) => context.isDisabled,
+      isIndeterminate: ({ context }) => {
+        return context.isIndeterminate
+      },
     },
   },
 )
