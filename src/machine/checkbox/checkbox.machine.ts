@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate'
+import { assign, createMachine, not } from 'xstate'
 
 export const machine = createMachine(
   {
@@ -12,6 +12,7 @@ export const machine = createMachine(
         actions: 'setIsHovered',
       },
       SET_ACTIVE: {
+        guard: not(({ context }) => context.isDisabled),
         actions: 'setIsActive',
       },
       SET_FOCUSED: {
