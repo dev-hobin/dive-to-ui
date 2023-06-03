@@ -1,10 +1,11 @@
+import { useEffect } from 'react'
 import { useActor } from '@xstate/react'
 import { forwardRefWithAsChild } from '@/core/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
 import { machine } from '@/machine/checkbox'
 
 export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
-  const [state, send] = useActor(machine.provide({}), {
+  const [state, send] = useActor(machine, {
     input: {
       isDisabled: props.disabled,
     },
@@ -15,6 +16,10 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
   const isHovered = context.isHovered
   const isActive = context.isActive
   const isDisabled = context.isDisabled
+
+  useEffect(() => {
+    send({ type: 'SET_DISABLED', value: props.disabled ?? false })
+  }, [send, props.disabled])
 
   return (
     <Dive.input
