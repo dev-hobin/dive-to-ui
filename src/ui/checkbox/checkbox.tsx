@@ -3,6 +3,7 @@ import { useActor } from '@xstate/react'
 import { forwardRefWithAsChild } from '@/core/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
 import { machine } from '@/machine/checkbox'
+import { dataAttr } from '@/core/utils/attrs'
 
 export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
   const [state, send] = useActor(machine, {
@@ -31,11 +32,11 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
       onPointerLeave={() => send({ type: 'SET_HOVERED', value: false })}
       onPointerDown={() => send({ type: 'SET_ACTIVE', value: true })}
       onPointerUp={() => send({ type: 'SET_ACTIVE', value: false })}
-      disabled={isDisabled || undefined}
-      data-dive-focused={isFocused ? '' : undefined}
-      data-dive-hovered={isHovered ? '' : undefined}
-      data-dive-active={isActive ? '' : undefined}
-      data-dive-disabled={isDisabled ? '' : undefined}
+      disabled={isDisabled}
+      data-dive-focused={dataAttr(isFocused)}
+      data-dive-hovered={dataAttr(isHovered)}
+      data-dive-active={dataAttr(isActive)}
+      data-dive-disabled={dataAttr(isDisabled)}
     />
   )
 })
