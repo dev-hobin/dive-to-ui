@@ -23,14 +23,16 @@ export const machine = createMachine(
       },
     },
     on: {
-      SET_CHECKED: {
-        target: '.checked',
-        guard: and([not('isIndeterminate'), not('isDisabled')]),
-      },
-      SET_UNCHECKED: {
-        target: '.unchecked',
-        guard: and([not('isIndeterminate'), not('isDisabled')]),
-      },
+      SET_CHECKED: [
+        {
+          guard: ({ event }) => event.checked,
+          target: '.checked',
+        },
+        {
+          guard: ({ event }) => !event.checked,
+          target: '.unchecked',
+        },
+      ],
       SET_HOVERED: {
         actions: 'setIsHovered',
       },
@@ -64,8 +66,7 @@ export const machine = createMachine(
       },
       events: {} as
         | { type: 'CHECK' }
-        | { type: 'SET_CHECKED' }
-        | { type: 'SET_UNCHECKED' }
+        | { type: 'SET_CHECKED'; checked: boolean }
         | { type: 'SET_HOVERED'; value: boolean }
         | { type: 'SET_ACTIVE'; value: boolean }
         | { type: 'SET_FOCUSED'; value: boolean }

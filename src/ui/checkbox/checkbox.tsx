@@ -6,7 +6,11 @@ import { machine } from '@/machines/checkbox'
 import { dataAttr } from '@/utils/attrs'
 import { composeRefs } from '@/utils/compose-refs'
 
-export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
+export const Checkbox = forwardRefWithAsChild<
+  'input',
+  { onInputChange?: (checked: boolean) => void }
+>((props, ref) => {
+  const { onInputChange, ...rest } = props
   const [state, send] = useActor(machine, {
     input: {
       isDisabled: props.disabled,
@@ -32,21 +36,14 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
   const name = context.name
 
   /**
-   * 체크 상태를 컴포넌트 밖에서 관리할 경우 checkbox 상태머신의 체크 상태 싱크를 맞춰주는 이팩트
+   * 컴포넌트 밖에서 관리하는 속성들과 상태머신의 싱크를 맞춰주는 이팩트
    */
   useEffect(() => {
     if (props.checked === undefined) return
 
-    if (props.checked) {
-      send({ type: 'SET_CHECKED' })
-    } else {
-      send({ type: 'SET_UNCHECKED' })
-    }
+    send({ type: 'SET_CHECKED', checked: props.checked })
   }, [send, props.checked])
 
-  /**
-   * 컴포넌트 밖에서 관리하는 속성들과 상태머신의 싱크를 맞춰주는 이팩트
-   */
   useEffect(() => {
     send({ type: 'SET_DISABLED', value: !!props.disabled })
   }, [send, props.disabled])
@@ -77,7 +74,7 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
 
   return (
     <Dive.input
-      {...props}
+      {...rest}
       type="checkbox"
       ref={composedRef}
       onFocus={() => send({ type: 'SET_FOCUSED', value: true })}
@@ -92,8 +89,8 @@ export const Checkbox = forwardRefWithAsChild<'input'>((props, ref) => {
       checked={!isControlled ? isChecked : undefined}
       defaultChecked={isControlled ? isChecked : undefined}
       onChange={(ev) => {
-        console.log(ev.target.checked)
         send({ type: 'CHECK' })
+        onInputChange?.(ev.target.checked)
       }}
       data-dive-focused={dataAttr(isFocused)}
       data-dive-hovered={dataAttr(isHovered)}
