@@ -2,37 +2,56 @@ import { and, assign, createMachine, not } from 'xstate'
 
 export const machine = createMachine(
   {
+    /** @xstate-layout N4IgpgJg5mDOIC5QGEAWYDGBrARgewA8BiAZQFEAVAfQAkB5ANTICUyARAbQAYBdRUAA55YASwAuIvADt+IAogDMAJgCMAOgCcG1QA4AbFx0aArCpUa9AGhABPRABYN6gOx7je5feOrlzgL5+1miYuISklFQAgsgUAJJM3HxIIEKiEtKy8ggKClxqSlwKKqr2XM72SkXO1nbZJmo6xcZcxhYqzlx67QFB6Nj4xOTUAGJ0yACq5Jy8sqnikjLJWcrqjUqOzlpKxgoVNYhKWg2tCpv2zsWbej0gwf1hQ1RssSSRAEIAMuyJs8LzGUtFKo1GU1jolHodM4oS19ggCgpNJ1tocdIYdoYbndQoMIqwAIrjWKsaZJQR-dKLUDLAr5Nx6Sr2NxcFFwlRlTQ7Yp6RxcCpuexYvo48LUWIAOTYlBYAFkJZEKGQfsk5pTMgcNM46e4lM4LltXGylEKQgM1AAnMAAQwgNlFVGQNDIyAA0t8ZiqKQt1Qg9XC2momVCdRVToUTfcCBbrbb7Y7nW7OCoySkvQDqYg-bZM-U0QUnJ0FGiVDoIzjozabGoMMLIER467leS0t7AQhmnlio4tF4FAz7Co4Zs8rpnO5SgoTOcy2bLZW1ABXKQ1kJ1hsupuplvpuSIDtqLtaDS9-uD7MIHSlNQXYMMiyVbo3KR4CBwWTYga-bdU3cIAC05hwsY5TXiWY5GBUxitMagS3MKZoiBAAA2YBfv8P5ZOccJ6Ay+RgcBzi6mYOjGDOhAVraaFqm2hxDiyoHBq45iTlBZFRnOtrVrWEBUa2GYIF0xgNOUWj6JUzTeHCl6IjeY53gyVRsRRVZLiu2CQLxO7LAYDQaMipjiVBxhDhYai5AUMK5JOGgBAEQA */
     id: 'Checkbox',
-    initial: 'unchecked',
+    initial: 'idle',
     states: {
-      checked: {
-        on: {
-          CHECK: {
-            target: 'unchecked',
-            guard: and([not('isIndeterminate'), not('isDisabled')]),
+      idle: {
+        always: [
+          {
+            target: 'ready.checked',
+            guard: ({ context }) => context.isDefaultChecked,
+          },
+          {
+            target: 'ready.unchecked',
+          },
+        ],
+      },
+      ready: {
+        initial: 'unchecked',
+        states: {
+          checked: {
+            on: {
+              CHECK: {
+                target: 'unchecked',
+                guard: and([not('isIndeterminate'), not('isDisabled')]),
+              },
+            },
+          },
+          unchecked: {
+            on: {
+              CHECK: {
+                target: 'checked',
+                guard: and([not('isIndeterminate'), not('isDisabled')]),
+              },
+            },
           },
         },
-      },
-      unchecked: {
         on: {
-          CHECK: {
-            target: 'checked',
-            guard: and([not('isIndeterminate'), not('isDisabled')]),
-          },
+          SET_CHECKED: [
+            {
+              guard: ({ event }) => event.checked,
+              target: '.checked',
+            },
+            {
+              guard: ({ event }) => !event.checked,
+              target: '.unchecked',
+            },
+          ],
         },
       },
     },
     on: {
-      SET_CHECKED: [
-        {
-          guard: ({ event }) => event.checked,
-          target: '.checked',
-        },
-        {
-          guard: ({ event }) => !event.checked,
-          target: '.unchecked',
-        },
-      ],
       SET_HOVERED: {
         actions: 'setIsHovered',
       },
@@ -61,6 +80,7 @@ export const machine = createMachine(
         isDisabled: boolean
         isRequired: boolean
         isIndeterminate: boolean
+        isDefaultChecked: boolean
         name?: string
         value: string | number | readonly string[]
       },
@@ -81,6 +101,7 @@ export const machine = createMachine(
       isDisabled: input.isDisabled ?? false,
       isRequired: input.isRequired ?? false,
       isIndeterminate: input.isIndeterminate ?? false,
+      isDefaultChecked: input.isDefaultChecked ?? false,
       name: input.name,
       value: input.value ?? 'on',
     }),

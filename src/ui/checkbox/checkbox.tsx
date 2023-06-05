@@ -15,6 +15,7 @@ export const Checkbox = forwardRefWithAsChild<
     input: {
       isDisabled: props.disabled,
       isRequired: props.required,
+      isDefaultChecked: props.defaultChecked,
       name: props.name,
       value: props.value,
     },
@@ -89,7 +90,7 @@ export const Checkbox = forwardRefWithAsChild<
       checked={!isControlled ? isChecked : undefined}
       defaultChecked={isControlled ? isChecked : undefined}
       onChange={(ev) => {
-        send({ type: 'CHECK' })
+        !isControlled && send({ type: 'CHECK' })
         onInputChange?.(ev.target.checked)
       }}
       data-dive-focused={dataAttr(isFocused)}
