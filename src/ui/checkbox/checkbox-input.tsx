@@ -9,7 +9,7 @@ export const Input = forwardRefWithAsChild<'input'>((props, forwardedRef) => {
     <Dive.input
       {...props}
       type="checkbox"
-      onChange={(e) => send({ type: 'CHECKED.SET', params: { checked: e.target.checked } })}
+      onChange={(e) => send({ type: 'CHECKED.SET', payload: { checked: e.target.checked } })}
       ref={forwardedRef}
     />
   )

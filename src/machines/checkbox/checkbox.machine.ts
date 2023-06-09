@@ -7,20 +7,11 @@ export const machine = createMachine(
     states: {
       idle: {},
     },
+    // @ts-ignore
     on: {
       'CHECKED.SET': {
         guard: not('isDisabled'),
-        actions: raise(({ event }) =>
-          event.params.checked
-            ? { type: 'CHECKED.SET.CHECKED' }
-            : { type: 'CHECKED.SET.UNCHECKED' },
-        ),
-      },
-      'CHECKED.SET.CHECKED': {
-        actions: { type: 'setChecked', params: { checked: true } },
-      },
-      'CHECKED.SET.UNCHECKED': {
-        actions: { type: 'setChecked', params: { checked: false } },
+        actions: 'setChecked',
       },
     },
     types: {
@@ -31,12 +22,7 @@ export const machine = createMachine(
         value: string
         name: string
       },
-      events: {} as
-        | { type: 'CHECKED.SET'; params: { checked: boolean } }
-        | { type: 'CHECKED.SET.CHECKED' }
-        | { type: 'CHECKED.SET.UNCHECKED' },
-
-      actions: {} as { type: 'setChecked'; params: { checked: boolean } },
+      events: {} as { type: 'CHECKED.SET'; payload: { checked: boolean } },
     },
     context: ({ input }) => ({
       checked: input?.checked ?? false,
@@ -48,8 +34,9 @@ export const machine = createMachine(
   },
   {
     actions: {
-      setChecked: assign(({ action }) => {
-        return { checked: action.params?.checked }
+      setChecked: assign(({ event, context }) => {
+        if (event.type !== 'CHECKED.SET') return context
+        return { checked: event.payload.checked }
       }),
     },
     guards: {
