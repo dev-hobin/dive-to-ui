@@ -1,10 +1,9 @@
-import { useActor } from '@xstate/react'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
-import { machine } from '@/machines/checkbox'
+import { CheckboxMachineContext } from './checkbox.context'
 
-export const Checkbox = forwardRefWithAsChild<'input'>((props, forwardedRef) => {
-  const [state, send] = useActor(machine)
+export const Input = forwardRefWithAsChild<'input'>((props, forwardedRef) => {
+  const { send } = CheckboxMachineContext.useActorRef()
 
   return (
     <Dive.input
