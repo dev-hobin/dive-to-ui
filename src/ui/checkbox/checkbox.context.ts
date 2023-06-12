@@ -1,4 +1,5 @@
+import { createContext } from 'react'
+import { ActorRefFrom } from 'xstate'
 import { machine } from '@/machines/checkbox'
-import { createActorContext } from '@xstate/react'
 
-export const CheckboxMachineContext = createActorContext(machine)
+export const ActorContext = createContext<ActorRefFrom<typeof machine> | null>(null)
