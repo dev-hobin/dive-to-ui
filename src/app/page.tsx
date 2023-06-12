@@ -1,9 +1,9 @@
-import { Checkbox } from '@/components/checkbox/checkbox'
+import Link from 'next/link'
 
 export default function Home() {
   return (
     <main>
-      <Checkbox />
+      <Link href="/checkbox">체크박스</Link>
     </main>
   )
 }

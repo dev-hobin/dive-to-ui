@@ -14,15 +14,15 @@ export const machine = createMachine(
             guard: 'isDisabled',
           },
           {
-            target: 'checkedState',
-          },
-          {
             target: '#Checkbox.checkedState.checked',
             guard: 'isChecked',
           },
           {
             target: '#Checkbox.checkedState.indeterminate',
             guard: 'isIndeterminate',
+          },
+          {
+            target: 'checkedState',
           },
         ],
       },
@@ -35,6 +35,7 @@ export const machine = createMachine(
             on: {
               CHECK: {
                 target: 'unchecked',
+                actions: [{ type: 'onChange', params: { checkedState: 'unchecked' } }],
               },
             },
           },
@@ -44,6 +45,7 @@ export const machine = createMachine(
             on: {
               CHECK: {
                 target: 'checked',
+                actions: [{ type: 'onChange', params: { checkedState: 'checked' } }],
               },
             },
           },
@@ -71,12 +73,15 @@ export const machine = createMachine(
         on: {
           SET_CHECKED: {
             target: '.checked',
+            actions: [{ type: 'onChange', params: { checkedState: 'checked' } }],
           },
           SET_UNCHECKED: {
             target: '.unchecked',
+            actions: [{ type: 'onChange', params: { checkedState: 'unchecked' } }],
           },
           SET_INDETERMINATE: {
             target: '.indeterminate',
+            actions: [{ type: 'onChange', params: { checkedState: 'indeterminate' } }],
           },
         },
       },
@@ -100,6 +105,8 @@ export const machine = createMachine(
         checkedState: CheckedState | null
         previousCheckedState: CheckedState | null
         disabled: boolean
+
+        onChange: (checked: CheckedState) => void | null
       },
       events: {} as
         | { type: 'CHECK' }
@@ -114,6 +121,8 @@ export const machine = createMachine(
       checkedState: input?.checkedState ?? null,
       previousCheckedState: null,
       disabled: input?.disabled ?? false,
+
+      onChange: input?.onChange ?? (() => {}),
     }),
   },
   {
@@ -123,6 +132,9 @@ export const machine = createMachine(
       isPreviousUnchecked: ({ context }) => context.previousCheckedState === 'unchecked',
       isIndeterminate: ({ context }) => context.checkedState === 'indeterminate',
       isDisabled: ({ context }) => context.disabled,
+    },
+    actions: {
+      onChange: ({ action, context }) => context.onChange(action.params?.checkedState),
     },
   },
 )
