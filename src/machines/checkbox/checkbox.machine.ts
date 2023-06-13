@@ -10,10 +10,6 @@ export const machine = createMachine(
       init: {
         always: [
           {
-            target: 'disabled',
-            guard: 'isDisabled',
-          },
-          {
             target: '#Checkbox.checkedState.checked',
             guard: 'isChecked',
           },
@@ -85,19 +81,10 @@ export const machine = createMachine(
           },
         },
       },
-      disabled: {
-        entry: assign({ disabled: true }),
-        exit: assign({ disabled: false }),
-        on: {
-          SET_ENABLED: {
-            target: 'init',
-          },
-        },
-      },
     },
     on: {
       SET_DISABLED: {
-        target: '.disabled',
+        actions: 'setDisabled',
       },
     },
     types: {
@@ -113,9 +100,8 @@ export const machine = createMachine(
         | { type: 'SET_CHECKED' }
         | { type: 'SET_UNCHECKED' }
         | { type: 'SET_INDETERMINATE' }
-        | { type: 'SET_DISABLED' }
-        | { type: 'SET_PREVIOUS_STATE' }
-        | { type: 'SET_ENABLED' },
+        | { type: 'SET_DISABLED'; payload: { disabled: boolean } }
+        | { type: 'SET_PREVIOUS_STATE' },
     },
     context: ({ input }) => ({
       checkedState: input?.checkedState ?? null,
@@ -135,6 +121,10 @@ export const machine = createMachine(
     },
     actions: {
       onChange: ({ action, context }) => context.onChange(action.params?.checkedState),
+      setDisabled: assign(({ event }) => {
+        if (event.type !== 'SET_DISABLED') return {}
+        return { disabled: event.payload.disabled }
+      }),
     },
   },
 )

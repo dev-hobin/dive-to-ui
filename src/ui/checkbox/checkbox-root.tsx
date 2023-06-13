@@ -25,11 +25,7 @@ export const Root = ({ children, disabled, checked, onCheckedChange }: RootProps
   useEffect(() => {
     if (disabled === undefined) return
 
-    if (disabled) {
-      actorRef.send({ type: 'SET_DISABLED' })
-    } else {
-      actorRef.send({ type: 'SET_ENABLED' })
-    }
+    actorRef.send({ type: 'SET_DISABLED', payload: { disabled: disabled } })
   }, [actorRef, disabled])
 
   useEffect(() => {

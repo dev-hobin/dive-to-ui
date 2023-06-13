@@ -15,6 +15,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedR
 
   useEffect(() => {
     if (!innerRef.current) return
+    if (!context.previousCheckedState) return
 
     const input = innerRef.current
     const inputProto = window.HTMLInputElement.prototype
@@ -33,9 +34,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedR
       {...props}
       ref={composedRef}
       type="checkbox"
-      disabled={state.matches('disabled')}
+      disabled={context.disabled}
       defaultChecked={state.matches({ checkedState: 'checked' })}
-      onChange={() => actorRef.send({ type: 'CHECK' })}
     />
   )
 })
