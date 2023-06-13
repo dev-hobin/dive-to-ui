@@ -34,7 +34,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedR
       {...props}
       ref={composedRef}
       type="checkbox"
+      aria-hidden
+      tabIndex={-1}
       disabled={context.disabled}
+      required={context.required}
       defaultChecked={state.matches({ checkedState: 'checked' })}
     />
   )

@@ -9,11 +9,13 @@ type RootProps = {
   checked?: boolean
   onCheckedChange?: (checked: CheckedState) => void
   disabled?: boolean
+  required?: boolean
 }
-export const Root = ({ children, disabled, checked, onCheckedChange }: RootProps) => {
+export const Root = ({ children, disabled, checked, required, onCheckedChange }: RootProps) => {
   const actorRef = useActorRef(machine, {
     input: {
       disabled,
+      required,
       checkedState: checked ? 'checked' : 'unchecked',
       onChange: (checked: CheckedState) => onCheckedChange?.(checked),
     },
@@ -25,8 +27,14 @@ export const Root = ({ children, disabled, checked, onCheckedChange }: RootProps
   useEffect(() => {
     if (disabled === undefined) return
 
-    actorRef.send({ type: 'SET_DISABLED', payload: { disabled: disabled } })
+    actorRef.send({ type: 'SET_DISABLED', payload: { disabled } })
   }, [actorRef, disabled])
+
+  useEffect(() => {
+    if (required === undefined) return
+
+    actorRef.send({ type: 'SET_REQUIRED', payload: { required } })
+  }, [actorRef, required])
 
   useEffect(() => {
     if (checked === undefined) return

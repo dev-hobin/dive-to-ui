@@ -33,6 +33,7 @@ export default function CheckboxPage() {
           onCheckedChange={(checked) => setChecked(checked === 'checked' ? true : false)}
           disabled={disabled}
         >
+          <Checkbox.Indicator>버튼</Checkbox.Indicator>
           <Checkbox.Input />
         </Checkbox.Root>
       </form>
