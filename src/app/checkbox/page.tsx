@@ -4,7 +4,7 @@ import * as Checkbox from '@/ui/checkbox'
 import { useState } from 'react'
 
 export default function CheckboxPage() {
-  const [checked, setChecked] = useState<boolean>(true)
+  const [checked, setChecked] = useState<boolean>(false)
   const [disabled, setDisabled] = useState<boolean>(false)
 
   return (
@@ -19,15 +19,24 @@ export default function CheckboxPage() {
         </button>
       </div>
 
-      <Checkbox.Root
-        checked={checked}
-        onCheckedChange={(checked) => {
-          setChecked(checked === 'checked' ? true : false)
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          console.log('onSubmit', e)
         }}
-        disabled={disabled}
+        onChange={(e) => {
+          console.log('onChange', e)
+        }}
       >
-        <Checkbox.Input />
-      </Checkbox.Root>
+        <Checkbox.Root
+          checked={checked}
+          onCheckedChange={(checked) => setChecked(checked === 'checked' ? true : false)}
+          disabled={disabled}
+        >
+          <Checkbox.Indicator>버튼</Checkbox.Indicator>
+          <Checkbox.Input />
+        </Checkbox.Root>
+      </form>
     </main>
   )
 }

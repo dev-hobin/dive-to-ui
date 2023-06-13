@@ -1,23 +1,46 @@
-import { useContext } from 'react'
+import { forwardRef, InputHTMLAttributes, useContext, useEffect, useRef } from 'react'
 import { useSelector } from '@xstate/react'
-import { Dive } from '@/core/dive'
-import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { ActorContext } from './checkbox.context'
+import { composeRefs } from '@/utils/compose-refs'
 
-export const Input = forwardRefWithAsChild<'input'>((props, forwardedRef) => {
+type InputProps = InputHTMLAttributes<HTMLInputElement>
+export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedRef) => {
   const actorRef = useContext(ActorContext)!
   const state = useSelector(actorRef, (state) => state)
 
-  console.log(state.matches({ checkedState: 'checked' }))
+  const innerRef = useRef<HTMLInputElement | null>(null)
+  const composedRef = composeRefs(forwardedRef, innerRef)
+
+  const context = state.context
+
+  useEffect(() => {
+    if (!innerRef.current) return
+    if (!context.previousCheckedState) return
+
+    const input = innerRef.current
+    const inputProto = window.HTMLInputElement.prototype
+    const descriptor = Object.getOwnPropertyDescriptor(inputProto, 'checked') as PropertyDescriptor
+    const setChecked = descriptor.set
+
+    if (context.checkedState !== context.previousCheckedState && setChecked) {
+      const event = new Event('click', { bubbles: true })
+      setChecked.call(input, context.checkedState == 'checked' ? true : false)
+      input.dispatchEvent(event)
+    }
+  }, [context.checkedState, context.previousCheckedState])
 
   return (
-    <Dive.input
+    <input
       {...props}
-      disabled={state.matches('disabled')}
-      checked={state.context.checkedState === 'checked'}
+      ref={composedRef}
       type="checkbox"
-      onChange={() => actorRef.send({ type: 'CHECK' })}
-      ref={forwardedRef}
+      aria-hidden
+      tabIndex={-1}
+      disabled={context.disabled}
+      required={context.required}
+      defaultChecked={state.matches({ checkedState: 'checked' })}
     />
   )
 })
+
+Input.displayName = 'Input'

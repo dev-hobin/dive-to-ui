@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate'
+import { assign, createMachine, not } from 'xstate'
 
 export type CheckedState = 'checked' | 'unchecked' | 'indeterminate'
 
@@ -9,10 +9,6 @@ export const machine = createMachine(
     states: {
       init: {
         always: [
-          {
-            target: 'disabled',
-            guard: 'isDisabled',
-          },
           {
             target: '#Checkbox.checkedState.checked',
             guard: 'isChecked',
@@ -32,9 +28,11 @@ export const machine = createMachine(
           checked: {
             entry: assign({ checkedState: 'checked' }),
             exit: assign({ previousCheckedState: 'checked' }),
+            // @ts-ignore
             on: {
               CHECK: {
                 target: 'unchecked',
+                guard: not('isDisabled'),
                 actions: [{ type: 'onChange', params: { checkedState: 'unchecked' } }],
               },
             },
@@ -42,9 +40,11 @@ export const machine = createMachine(
           unchecked: {
             entry: assign({ checkedState: 'unchecked' }),
             exit: assign({ previousCheckedState: 'unchecked' }),
+            // @ts-ignore
             on: {
               CHECK: {
                 target: 'checked',
+                guard: not('isDisabled'),
                 actions: [{ type: 'onChange', params: { checkedState: 'checked' } }],
               },
             },
@@ -85,26 +85,22 @@ export const machine = createMachine(
           },
         },
       },
-      disabled: {
-        entry: assign({ disabled: true }),
-        exit: assign({ disabled: false }),
-        on: {
-          SET_ENABLED: {
-            target: 'init',
-          },
-        },
-      },
     },
     on: {
       SET_DISABLED: {
-        target: '.disabled',
+        actions: 'setDisabled',
+      },
+      SET_REQUIRED: {
+        actions: 'setRequired',
       },
     },
     types: {
       context: {} as {
-        checkedState: CheckedState | null
-        previousCheckedState: CheckedState | null
+        checkedState?: CheckedState
+        previousCheckedState?: CheckedState
+        name?: string
         disabled: boolean
+        required: boolean
 
         onChange: (checked: CheckedState) => void | null
       },
@@ -113,14 +109,16 @@ export const machine = createMachine(
         | { type: 'SET_CHECKED' }
         | { type: 'SET_UNCHECKED' }
         | { type: 'SET_INDETERMINATE' }
-        | { type: 'SET_DISABLED' }
-        | { type: 'SET_PREVIOUS_STATE' }
-        | { type: 'SET_ENABLED' },
+        | { type: 'SET_DISABLED'; payload: { disabled: boolean } }
+        | { type: 'SET_REQUIRED'; payload: { required: boolean } }
+        | { type: 'SET_PREVIOUS_STATE' },
     },
     context: ({ input }) => ({
-      checkedState: input?.checkedState ?? null,
-      previousCheckedState: null,
+      checkedState: input?.checkedState,
+      previousCheckedState: undefined,
+      name: input?.name,
       disabled: input?.disabled ?? false,
+      required: input?.required ?? false,
 
       onChange: input?.onChange ?? (() => {}),
     }),
@@ -135,6 +133,14 @@ export const machine = createMachine(
     },
     actions: {
       onChange: ({ action, context }) => context.onChange(action.params?.checkedState),
+      setDisabled: assign(({ event }) => {
+        if (event.type !== 'SET_DISABLED') return {}
+        return { disabled: event.payload.disabled }
+      }),
+      setRequired: assign(({ event }) => {
+        if (event.type !== 'SET_REQUIRED') return {}
+        return { disabled: event.payload.required }
+      }),
     },
   },
 )
