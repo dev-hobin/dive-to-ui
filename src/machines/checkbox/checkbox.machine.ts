@@ -96,7 +96,7 @@ export const machine = createMachine(
     },
     types: {
       context: {} as {
-        checkedState?: CheckedState
+        checkedState: CheckedState
         previousCheckedState?: CheckedState
         name?: string
         disabled: boolean
@@ -114,7 +114,7 @@ export const machine = createMachine(
         | { type: 'SET_PREVIOUS_STATE' },
     },
     context: ({ input }) => ({
-      checkedState: input?.checkedState,
+      checkedState: input?.checkedState ?? 'unchecked',
       previousCheckedState: undefined,
       name: input?.name,
       disabled: input?.disabled ?? false,
