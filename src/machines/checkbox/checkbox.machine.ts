@@ -73,15 +73,12 @@ export const machine = createMachine(
         on: {
           SET_CHECKED: {
             target: '.checked',
-            actions: [{ type: 'onChange', params: { checkedState: 'checked' } }],
           },
           SET_UNCHECKED: {
             target: '.unchecked',
-            actions: [{ type: 'onChange', params: { checkedState: 'unchecked' } }],
           },
           SET_INDETERMINATE: {
             target: '.indeterminate',
-            actions: [{ type: 'onChange', params: { checkedState: 'indeterminate' } }],
           },
         },
       },
@@ -101,8 +98,6 @@ export const machine = createMachine(
         name?: string
         disabled: boolean
         required: boolean
-
-        onChange: (checked: CheckedState) => void | null
       },
       events: {} as
         | { type: 'CHECK' }
@@ -132,7 +127,6 @@ export const machine = createMachine(
       isDisabled: ({ context }) => context.disabled,
     },
     actions: {
-      onChange: ({ action, context }) => context.onChange(action.params?.checkedState),
       setDisabled: assign(({ event }) => {
         if (event.type !== 'SET_DISABLED') return {}
         return { disabled: event.payload.disabled }
