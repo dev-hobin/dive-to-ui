@@ -4,6 +4,7 @@ import { machine } from '@/machines/checkbox'
 import { ActorContext } from './checkbox.context'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 import { useControllableState } from '@/hooks/use-controllable-state'
+import { useSync } from '@/hooks/use-sync'
 
 type RootProps = {
   children: ReactNode
@@ -35,20 +36,18 @@ export const Root = (props: RootProps) => {
   })
 
   const context = useSelector(actorRef, (state) => state.context)
-  const state = useSelector(actorRef, (state) => state.value)
 
   useEffect(() => {
     const subscription = actorRef.subscribe((next) => {
       setCheckedState(next.context.checkedState)
       setDisabled(next.context.disabled)
+      setRequired(next.context.required)
     })
 
     return () => subscription.unsubscribe()
-  }, [actorRef, setCheckedState, setDisabled])
+  }, [actorRef, setCheckedState, setDisabled, setRequired])
 
-  useEffect(() => {
-    if (context.checkedState === checkedState) return
-
+  useSync(context.checkedState, checkedState, (_, checkedState) => {
     switch (checkedState) {
       case 'checked':
         actorRef.send({ type: 'SET_CHECKED' })
@@ -61,22 +60,13 @@ export const Root = (props: RootProps) => {
       default:
         break
     }
-  }, [actorRef, checkedState, context.checkedState])
-
-  useEffect(() => {
-    if (context.disabled === disabled) return
-
+  })
+  useSync(context.disabled, disabled, (_, disabled) => {
     actorRef.send({ type: 'SET_DISABLED', payload: { disabled } })
-  }, [actorRef, context.disabled, disabled])
-
-  useEffect(() => {
-    if (context.required === required) return
-
+  })
+  useSync(context.required, required, (_, required) => {
     actorRef.send({ type: 'SET_REQUIRED', payload: { required } })
-  }, [actorRef, context.required, required])
-
-  console.log('state', state)
-  console.log('context', context)
+  })
 
   return <ActorContext.Provider value={actorRef}>{props.children}</ActorContext.Provider>
 }
