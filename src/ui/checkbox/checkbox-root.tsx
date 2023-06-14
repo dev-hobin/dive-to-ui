@@ -3,6 +3,8 @@ import { useActorRef, useSelector } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
 import { ActorContext } from './checkbox.context'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
+import { useControllableState } from '@/hooks/use-controllable-state'
+import { useSync } from '@/hooks/use-sync'
 
 type RootProps = {
   children: ReactNode
@@ -11,45 +13,60 @@ type RootProps = {
   disabled?: boolean
   required?: boolean
 }
-export const Root = ({ children, disabled, checked, required, onCheckedChange }: RootProps) => {
+export const Root = (props: RootProps) => {
+  const [checkedState, setCheckedState] = useControllableState({
+    value: props.checked ? 'checked' : 'unchecked',
+    onChange: props.onCheckedChange,
+  })
+  const [disabled, setDisabled] = useControllableState({
+    value: props.disabled,
+    defaultValue: false,
+  })
+  const [required, setRequired] = useControllableState({
+    value: props.required,
+    defaultValue: false,
+  })
+
   const actorRef = useActorRef(machine, {
     input: {
       disabled,
       required,
-      checkedState: checked ? 'checked' : 'unchecked',
-      onChange: (checked: CheckedState) => onCheckedChange?.(checked),
+      checkedState,
     },
   })
 
   const context = useSelector(actorRef, (state) => state.context)
-  const state = useSelector(actorRef, (state) => state.value)
 
   useEffect(() => {
-    if (disabled === undefined) return
+    const subscription = actorRef.subscribe((next) => {
+      setCheckedState(next.context.checkedState)
+      setDisabled(next.context.disabled)
+      setRequired(next.context.required)
+    })
 
-    actorRef.send({ type: 'SET_DISABLED', payload: { disabled } })
-  }, [actorRef, disabled])
+    return () => subscription.unsubscribe()
+  }, [actorRef, setCheckedState, setDisabled, setRequired])
 
-  useEffect(() => {
-    if (required === undefined) return
-
-    actorRef.send({ type: 'SET_REQUIRED', payload: { required } })
-  }, [actorRef, required])
-
-  useEffect(() => {
-    if (checked === undefined) return
-    if (checked && context.checkedState === 'checked') return
-    if (!checked && context.checkedState === 'unchecked') return
-
-    if (checked) {
-      actorRef.send({ type: 'SET_CHECKED' })
-    } else {
-      actorRef.send({ type: 'SET_UNCHECKED' })
+  useSync(context.checkedState, checkedState, (_, checkedState) => {
+    switch (checkedState) {
+      case 'checked':
+        actorRef.send({ type: 'SET_CHECKED' })
+        break
+      case 'unchecked':
+        actorRef.send({ type: 'SET_UNCHECKED' })
+        break
+      case 'indeterminate':
+        actorRef.send({ type: 'SET_INDETERMINATE' })
+      default:
+        break
     }
-  }, [actorRef, checked, context.checkedState])
+  })
+  useSync(context.disabled, disabled, (_, disabled) => {
+    actorRef.send({ type: 'SET_DISABLED', payload: { disabled } })
+  })
+  useSync(context.required, required, (_, required) => {
+    actorRef.send({ type: 'SET_REQUIRED', payload: { required } })
+  })
 
-  console.log('state', state)
-  console.log('context', context)
-
-  return <ActorContext.Provider value={actorRef}>{children}</ActorContext.Provider>
+  return <ActorContext.Provider value={actorRef}>{props.children}</ActorContext.Provider>
 }
