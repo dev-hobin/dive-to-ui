@@ -17,6 +17,7 @@ const getCheckedState = (checked: CheckedState | boolean | undefined): CheckedSt
 
 type RootProps = {
   children: ReactNode
+  id: string
   checked?: CheckedState | boolean
   onCheckedChange?: (checked: CheckedState) => void
   disabled?: boolean
@@ -38,6 +39,7 @@ export const Root = (props: RootProps) => {
 
   const actorRef = useActorRef(machine, {
     input: {
+      id: props.id,
       disabled,
       required,
       checkedState,

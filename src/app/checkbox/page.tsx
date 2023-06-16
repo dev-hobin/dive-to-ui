@@ -22,13 +22,14 @@ export default function CheckboxPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          console.log('onSubmit', e)
+          console.log('form onSubmit', e)
         }}
         onChange={(e) => {
-          console.log('onChange', e)
+          console.log('form onChange', e)
         }}
       >
         <Checkbox.Root
+          id={'checkbox-input'}
           checked={checked}
           onCheckedChange={(checked) => setChecked(checked === 'checked' ? true : false)}
           disabled={disabled}

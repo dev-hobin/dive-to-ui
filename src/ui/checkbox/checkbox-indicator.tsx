@@ -19,9 +19,7 @@ export const Indicator = forwardRefWithAsChild<'button'>((props, forwardedRef) =
       onKeyDown={(ev) => {
         if (ev.key === 'Enter') ev.preventDefault()
       }}
-      onClick={(e) => {
-        actorRef.send({ type: 'CHECK' })
-      }}
+      onClick={() => actorRef.send({ type: 'CHECK' })}
       {...props}
       ref={forwardedRef}
     />
