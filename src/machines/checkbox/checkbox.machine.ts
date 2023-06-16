@@ -33,7 +33,6 @@ export const machine = createMachine(
               CHECK: {
                 target: 'unchecked',
                 guard: not('isDisabled'),
-                actions: [{ type: 'onChange', params: { checkedState: 'unchecked' } }],
               },
             },
           },
@@ -45,29 +44,12 @@ export const machine = createMachine(
               CHECK: {
                 target: 'checked',
                 guard: not('isDisabled'),
-                actions: [{ type: 'onChange', params: { checkedState: 'checked' } }],
               },
             },
           },
           indeterminate: {
             entry: assign({ checkedState: 'indeterminate' }),
             exit: assign({ previousCheckedState: 'indeterminate' }),
-            on: {
-              SET_PREVIOUS_STATE: [
-                {
-                  target: 'checked',
-                  guard: 'isPreviousChecked',
-                },
-                {
-                  target: 'unchecked',
-                  guard: 'isPreviousUnchecked',
-                },
-                {
-                  target: 'indeterminate',
-                  reenter: true,
-                },
-              ],
-            },
           },
         },
         on: {
@@ -105,8 +87,7 @@ export const machine = createMachine(
         | { type: 'SET_UNCHECKED' }
         | { type: 'SET_INDETERMINATE' }
         | { type: 'SET_DISABLED'; payload: { disabled: boolean } }
-        | { type: 'SET_REQUIRED'; payload: { required: boolean } }
-        | { type: 'SET_PREVIOUS_STATE' },
+        | { type: 'SET_REQUIRED'; payload: { required: boolean } },
     },
     context: ({ input }) => ({
       checkedState: input?.checkedState ?? 'unchecked',
@@ -114,15 +95,11 @@ export const machine = createMachine(
       name: input?.name,
       disabled: input?.disabled ?? false,
       required: input?.required ?? false,
-
-      onChange: input?.onChange ?? (() => {}),
     }),
   },
   {
     guards: {
       isChecked: ({ context }) => context.checkedState === 'checked',
-      isPreviousChecked: ({ context }) => context.previousCheckedState === 'checked',
-      isPreviousUnchecked: ({ context }) => context.previousCheckedState === 'unchecked',
       isIndeterminate: ({ context }) => context.checkedState === 'indeterminate',
       isDisabled: ({ context }) => context.disabled,
     },
