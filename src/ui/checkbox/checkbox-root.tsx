@@ -6,16 +6,25 @@ import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 import { useControllableState } from '@/hooks/use-controllable-state'
 import { useSync } from '@/hooks/use-sync'
 
+const getCheckedState = (checked: CheckedState | boolean | undefined): CheckedState => {
+  if (checked === undefined) return 'unchecked'
+  if (typeof checked === 'boolean') {
+    if (checked) return 'checked'
+    else return 'unchecked'
+  }
+  return checked
+}
+
 type RootProps = {
   children: ReactNode
-  checked?: boolean
+  checked?: CheckedState | boolean
   onCheckedChange?: (checked: CheckedState) => void
   disabled?: boolean
   required?: boolean
 }
 export const Root = (props: RootProps) => {
   const [checkedState, setCheckedState] = useControllableState({
-    value: props.checked ? 'checked' : 'unchecked',
+    value: getCheckedState(props.checked),
     onChange: props.onCheckedChange,
   })
   const [disabled, setDisabled] = useControllableState({
@@ -35,6 +44,7 @@ export const Root = (props: RootProps) => {
     },
   })
 
+  const value = useSelector(actorRef, (state) => state.value)
   const context = useSelector(actorRef, (state) => state.context)
 
   useEffect(() => {
@@ -67,6 +77,8 @@ export const Root = (props: RootProps) => {
   useSync(context.required, required, (_, required) => {
     actorRef.send({ type: 'SET_REQUIRED', payload: { required } })
   })
+
+  console.log(value, context)
 
   return <ActorContext.Provider value={actorRef}>{props.children}</ActorContext.Provider>
 }

@@ -7,11 +7,21 @@ type InputProps = InputHTMLAttributes<HTMLInputElement>
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedRef) => {
   const actorRef = useContext(ActorContext)!
   const state = useSelector(actorRef, (state) => state)
+  const context = state.context
 
   const innerRef = useRef<HTMLInputElement | null>(null)
   const composedRef = composeRefs(forwardedRef, innerRef)
 
-  const context = state.context
+  useEffect(() => {
+    if (!innerRef.current) return
+    const input = innerRef.current
+
+    if (context.checkedState === 'indeterminate') {
+      input.indeterminate = true
+    } else {
+      input.indeterminate = false
+    }
+  }, [context.checkedState])
 
   useEffect(() => {
     if (!innerRef.current) return
@@ -24,7 +34,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, forwardedR
 
     if (context.checkedState !== context.previousCheckedState && setChecked) {
       const event = new Event('click', { bubbles: true })
-      setChecked.call(input, context.checkedState == 'checked' ? true : false)
+      input.indeterminate = context.checkedState === 'indeterminate' ? true : false
+      setChecked.call(input, context.checkedState == 'unchecked' ? false : true)
       input.dispatchEvent(event)
     }
   }, [context.checkedState, context.previousCheckedState])
