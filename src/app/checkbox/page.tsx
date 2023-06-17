@@ -1,9 +1,13 @@
 'use client'
 
+import * as Checkbox from '../../ui/checkbox'
+
 export default function CheckboxPage() {
   return (
     <main>
-      <h1>체크박스</h1>
+      <Checkbox.Root id="checkbox">
+        <Checkbox.Indicator />
+      </Checkbox.Root>
     </main>
   )
 }
