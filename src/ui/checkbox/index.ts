@@ -1,4 +1,4 @@
-export { Root } from './checkbox-root'
-export { Indicator } from './checkbox-indicator'
-export { Label } from './checkbox-label'
-export { Input } from './checkbox-input'
+export { Root } from './root'
+export { Indicator } from './indicator'
+export { Input } from './input'
+export { Label } from './label'

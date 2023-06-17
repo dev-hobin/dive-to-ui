@@ -1,144 +1,96 @@
-import { assign, createMachine, not, raise } from 'xstate'
+import { assign, createMachine } from 'xstate'
 
-export type CheckedState = 'checked' | 'unchecked' | 'indeterminate'
+export type Context = {
+  checked: CheckedState
+  id: string
+  name: string
+  disabled: boolean
+  required: boolean
+  value: string
+  isControlled: boolean
+}
+export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
 export const machine = createMachine(
   {
+    /** @xstate-layout N4IgpgJg5mDOIC5QGEAWYDGBrARgewA8BiZACQFFkBpcgEQDoBlcgFQG0AGAXUVAAc8sAJYAXIXgB2vEAUQAWAEwAaEAE9EARgDsW+gE4ArAGYNCgwF9zKtJlyESAeQByLcgA0WTVpx5IQA4TFJaVkERRV1BAAODXoLKxAbbHwCeiEIABswEgpqH2kA0XEpP1CFDgN6LQMIxD09fS0ANgMms0sEiTwIOGkku1D+QSLg0sQAWibahEnLa3RkwjTMsALhoJLQMp16cq0OEzNp8tjFPSao6o7zIA */
     id: 'Checkbox',
-    initial: 'init',
+    initial: 'idle',
     states: {
-      init: {
-        always: [
-          {
-            target: '#Checkbox.checkedState.checked',
-            guard: 'isChecked',
-          },
-          {
-            target: '#Checkbox.checkedState.indeterminate',
-            guard: 'isIndeterminate',
-          },
-          {
-            target: 'checkedState',
-          },
-        ],
-      },
-      checkedState: {
-        initial: 'unchecked',
-        states: {
-          checked: {
-            entry: assign({ checkedState: 'checked' }),
-            exit: assign({ previousCheckedState: 'checked' }),
-            // @ts-ignore
-            on: {
-              CHECK: {
-                target: 'unchecked',
-                guard: not('isDisabled'),
-                actions: [{ type: 'dispatchChange', params: { checkedState: 'unchecked' } }],
-              },
-            },
-          },
-          unchecked: {
-            entry: assign({ checkedState: 'unchecked' }),
-            exit: assign({ previousCheckedState: 'unchecked' }),
-            // @ts-ignore
-            on: {
-              CHECK: {
-                target: 'checked',
-                guard: not('isDisabled'),
-                actions: [{ type: 'dispatchChange', params: { checkedState: 'checked' } }],
-              },
-            },
-          },
-          indeterminate: {
-            entry: assign({ checkedState: 'indeterminate' }),
-            exit: assign({ previousCheckedState: 'indeterminate' }),
-          },
-        },
+      idle: {
         on: {
-          SET_CHECKED: {
-            target: '.checked',
-            actions: [{ type: 'dispatchChange', params: { checkedState: 'checked' } }],
-          },
-          SET_UNCHECKED: {
-            target: '.unchecked',
-            actions: [{ type: 'dispatchChange', params: { checkedState: 'unchecked' } }],
-          },
-          SET_INDETERMINATE: {
-            target: '.indeterminate',
-            actions: [{ type: 'dispatchChange', params: { checkedState: 'indeterminate' } }],
-          },
-          'INPUT.CHANGE': [
+          CHECK: [
             {
-              target: '.indeterminate',
-              guard: ({ event }) => event.payload.indeterminate,
+              cond: (ctx) => !ctx.disabled && !ctx.isControlled,
+              actions: ['setChecked', 'dispatchChange'],
             },
             {
-              target: '.checked',
-              guard: ({ event }) => event.payload.checked,
-            },
-            {
-              target: '.unchecked',
+              cond: (ctx) => !ctx.disabled && ctx.isControlled,
+              actions: 'setChecked',
             },
           ],
         },
       },
     },
     on: {
-      SET_DISABLED: {
-        actions: 'setDisabled',
+      'CHECKED.SET': {
+        target: '.idle',
+        actions: ['setChecked', 'dispatchChange'],
       },
-      SET_REQUIRED: {
-        actions: 'setRequired',
+      'CONTEXT.SET': {
+        target: '.idle',
+        actions: 'setContext',
       },
     },
-    types: {
-      context: {} as {
-        id: string
-        checkedState: CheckedState
-        previousCheckedState?: CheckedState
-        name?: string
-        disabled: boolean
-        required: boolean
-      },
+    schema: {
+      context: {} as Context,
       events: {} as
         | { type: 'CHECK' }
-        | { type: 'SET_CHECKED' }
-        | { type: 'SET_UNCHECKED' }
-        | { type: 'SET_INDETERMINATE' }
-        | { type: 'SET_DISABLED'; payload: { disabled: boolean } }
-        | { type: 'SET_REQUIRED'; payload: { required: boolean } }
-        | {
-            type: 'INPUT.CHANGE'
-            payload: { checked: boolean; indeterminate: boolean }
-          },
+        | { type: 'CHECKED.SET'; value: CheckedState }
+        | { type: 'CONTEXT.SET'; value: Partial<Context> },
     },
-    context: ({ input }) => ({
-      id: input?.id,
-      checkedState: input?.checkedState ?? 'unchecked',
-      previousCheckedState: undefined,
-      name: input?.name,
-      disabled: input?.disabled ?? false,
-      required: input?.required ?? false,
-    }),
+    context: {
+      checked: 'unchecked',
+      id: 'checkboxId',
+      name: 'inputName',
+      disabled: false,
+      required: false,
+      value: 'on',
+      isControlled: false,
+    },
+    predictableActionArguments: true,
+    preserveActionOrder: true,
   },
   {
     guards: {
-      isChecked: ({ context }) => context.checkedState === 'checked',
-      isIndeterminate: ({ context }) => context.checkedState === 'indeterminate',
-      isDisabled: ({ context }) => context.disabled,
+      isNotDisabled: (ctx) => !ctx.disabled,
+      isNotControlled: (ctx) => !ctx.isControlled,
     },
     actions: {
-      setDisabled: assign(({ event }) => {
-        if (event.type !== 'SET_DISABLED') return {}
-        return { disabled: event.payload.disabled }
+      setChecked: assign({
+        checked: (ctx, ev) => {
+          if (ev.type === 'CHECK') {
+            if (ctx.checked === 'checked') return 'unchecked'
+            if (ctx.checked === 'unchecked') return 'checked'
+            return 'checked'
+          } else if (ev.type === 'CHECKED.SET') {
+            const checked = ev.value
+            return checked
+          } else {
+            return ctx.checked
+          }
+        },
       }),
-      setRequired: assign(({ event }) => {
-        if (event.type !== 'SET_REQUIRED') return {}
-        return { disabled: event.payload.required }
+      setContext: assign((ctx, ev) => {
+        if (ev.type === 'CONTEXT.SET') return ev.value
+        return ctx
       }),
 
-      dispatchChange: ({ action, context }) => {
-        const input = document.getElementById(context.id) as HTMLInputElement
+      dispatchChange: (ctx) => {
+        const { id, checked } = ctx
+        console.log('dispatchChange')
+
+        const inputEl = document.getElementById(id) as HTMLInputElement | null
         const inputProto = window.HTMLInputElement.prototype
         const descriptor = Object.getOwnPropertyDescriptor(
           inputProto,
@@ -146,11 +98,11 @@ export const machine = createMachine(
         ) as PropertyDescriptor
         const setChecked = descriptor.set
 
-        if (setChecked) {
+        if (inputEl && setChecked) {
           const ev = new Event('click', { bubbles: true })
-          input.indeterminate = action.params?.checkedState === 'indeterminate' ? true : false
-          setChecked.call(input, action.params?.checkedState === 'unchecked' ? false : true)
-          input.dispatchEvent(ev)
+          inputEl.indeterminate = checked === 'indeterminate' ? true : false
+          setChecked.call(inputEl, checked === 'unchecked' ? false : true)
+          inputEl.dispatchEvent(ev)
         }
       },
     },

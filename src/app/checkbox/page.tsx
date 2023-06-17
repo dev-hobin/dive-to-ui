@@ -1,41 +1,43 @@
 'use client'
 
-import * as Checkbox from '@/ui/checkbox'
 import { useState } from 'react'
+import * as Checkbox from '../../ui/checkbox'
+import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 
 export default function CheckboxPage() {
-  const [checked, setChecked] = useState<boolean>(false)
+  const [checked, setChecked] = useState<CheckedState>('indeterminate')
   const [disabled, setDisabled] = useState<boolean>(false)
 
   return (
     <main>
-      <h1>체크박스</h1>
-      <div>
-        <button type="button" onClick={() => setChecked(!checked)}>
-          checked state: {String(checked)}
-        </button>
-        <button type="button" onClick={() => setDisabled(!disabled)}>
-          disabled state: {String(disabled)}
-        </button>
-      </div>
-
+      <button
+        type="button"
+        onClick={() => setChecked((prev) => (prev === 'checked' ? 'unchecked' : 'checked'))}
+      >
+        체크상태 : {String(checked)}
+      </button>
+      <button type="button" onClick={() => setDisabled(!disabled)}>
+        disabled : {String(disabled)}
+      </button>
       <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          console.log('form onSubmit', e)
+        onSubmit={(ev) => {
+          ev.preventDefault()
+          console.log(ev)
         }}
-        onChange={(e) => {
-          console.log('form onChange', e)
+        onChange={(ev) => {
+          console.log('form', ev)
+          console.log('form', ev)
         }}
       >
         <Checkbox.Root
-          id={'checkbox-input'}
+          id="checkbox"
           checked={checked}
-          onCheckedChange={(checked) => setChecked(checked === 'checked' ? true : false)}
+          onCheckedChange={setChecked}
           disabled={disabled}
         >
-          <Checkbox.Indicator>버튼</Checkbox.Indicator>
+          <Checkbox.Indicator>체크박스</Checkbox.Indicator>
           <Checkbox.Input />
+          <Checkbox.Label>체크박스 라벨</Checkbox.Label>
         </Checkbox.Root>
       </form>
     </main>
