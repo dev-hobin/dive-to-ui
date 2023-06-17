@@ -1,11 +1,14 @@
+import { useContext } from 'react'
+import { useActor } from '@xstate/react'
 import { Dive } from '@/core/dive'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { MachineContext } from './context'
 
 export const Indicator = forwardRefWithAsChild<'button'>((props, ref) => {
-  const [state, send] = MachineContext.useActor()
+  const service = useContext(MachineContext)!
+  const [state, send] = useActor(service)
 
-  console.log(state)
+  console.log(state.context)
 
-  return <Dive.button {...props} ref={ref} />
+  return <Dive.button {...props} onClick={(ev) => send({ type: 'CHECK' })} ref={ref} />
 })
