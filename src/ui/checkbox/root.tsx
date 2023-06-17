@@ -41,6 +41,8 @@ export const Root = (props: RootProps) => {
   }, [onCheckedChange, service])
 
   useEffect(() => {
+    send({ type: 'CONTEXT.SET', value: { isControlled: !!props.checked } })
+
     if (props.checked === undefined) return
     send({ type: 'CHECKED.SET', value: props.checked })
   }, [props.checked, send])
@@ -53,7 +55,7 @@ export const Root = (props: RootProps) => {
     if (props.required !== undefined) context.required = props.required
     if (props.value !== undefined) context.value = props.value
     send({ type: 'CONTEXT.SET', value: context })
-  }, [props.disabled, props.id, props.name, props.required, props.value, send])
+  }, [props.disabled, props.id, props.name, props.required, props.value, props.checked, send])
 
   return <MachineContext.Provider value={service}>{props.children}</MachineContext.Provider>
 }

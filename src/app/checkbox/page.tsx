@@ -5,7 +5,7 @@ import * as Checkbox from '../../ui/checkbox'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 
 export default function CheckboxPage() {
-  const [checked, setChecked] = useState<CheckedState>('checked')
+  const [checked, setChecked] = useState<CheckedState>('indeterminate')
   const [disabled, setDisabled] = useState<boolean>(false)
 
   return (
@@ -19,14 +19,27 @@ export default function CheckboxPage() {
       <button type="button" onClick={() => setDisabled(!disabled)}>
         disabled : {String(disabled)}
       </button>
-      <Checkbox.Root
-        id="checkbox"
-        checked={checked}
-        onCheckedChange={setChecked}
-        disabled={disabled}
+      <form
+        onSubmit={(ev) => {
+          ev.preventDefault()
+          console.log(ev)
+        }}
+        onChange={(ev) => {
+          console.log('form', ev)
+          console.log('form', ev)
+        }}
       >
-        <Checkbox.Indicator>체크박스</Checkbox.Indicator>
-      </Checkbox.Root>
+        <Checkbox.Root
+          id="checkbox"
+          checked={checked}
+          onCheckedChange={setChecked}
+          disabled={disabled}
+        >
+          <Checkbox.Indicator>체크박스</Checkbox.Indicator>
+          <Checkbox.Input />
+          <Checkbox.Label>체크박스 라벨</Checkbox.Label>
+        </Checkbox.Root>
+      </form>
     </main>
   )
 }

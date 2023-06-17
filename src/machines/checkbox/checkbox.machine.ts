@@ -7,27 +7,35 @@ export type Context = {
   disabled: boolean
   required: boolean
   value: string
+  isControlled: boolean
 }
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
 export const machine = createMachine(
   {
+    /** @xstate-layout N4IgpgJg5mDOIC5QGEAWYDGBrARgewA8BiZACQFFkBpcgEQDoBlcgFQG0AGAXUVAAc8sAJYAXIXgB2vEAUQAWAEwAaEAE9EARgDsW+gE4ArAGYNCgwF9zKtJlyESAeQByLcgA0WTVpx5IQA4TFJaVkERRV1BAAODXoLKxAbbHwCeiEIABswEgpqH2kA0XEpP1CFDgN6LQMIxD09fS0ANgMms0sEiTwIOGkku1D+QSLg0sQAWibahEnLa3RkwjTMsALhoJLQMp16cq0OEzNp8tjFPSao6o7zIA */
     id: 'Checkbox',
     initial: 'idle',
     states: {
       idle: {
         on: {
-          CHECK: {
-            cond: 'isNotDisabled',
-            actions: 'setChecked',
-          },
+          CHECK: [
+            {
+              cond: (ctx) => !ctx.disabled && !ctx.isControlled,
+              actions: ['setChecked', 'dispatchChange'],
+            },
+            {
+              cond: (ctx) => !ctx.disabled && ctx.isControlled,
+              actions: 'setChecked',
+            },
+          ],
         },
       },
     },
     on: {
       'CHECKED.SET': {
         target: '.idle',
-        actions: 'setChecked',
+        actions: ['setChecked', 'dispatchChange'],
       },
       'CONTEXT.SET': {
         target: '.idle',
@@ -48,6 +56,7 @@ export const machine = createMachine(
       disabled: false,
       required: false,
       value: 'on',
+      isControlled: false,
     },
     predictableActionArguments: true,
     preserveActionOrder: true,
@@ -55,6 +64,7 @@ export const machine = createMachine(
   {
     guards: {
       isNotDisabled: (ctx) => !ctx.disabled,
+      isNotControlled: (ctx) => !ctx.isControlled,
     },
     actions: {
       setChecked: assign({
@@ -75,6 +85,26 @@ export const machine = createMachine(
         if (ev.type === 'CONTEXT.SET') return ev.value
         return ctx
       }),
+
+      dispatchChange: (ctx) => {
+        const { id, checked } = ctx
+        console.log('dispatchChange')
+
+        const inputEl = document.getElementById(id) as HTMLInputElement | null
+        const inputProto = window.HTMLInputElement.prototype
+        const descriptor = Object.getOwnPropertyDescriptor(
+          inputProto,
+          'checked',
+        ) as PropertyDescriptor
+        const setChecked = descriptor.set
+
+        if (inputEl && setChecked) {
+          const ev = new Event('click', { bubbles: true })
+          inputEl.indeterminate = checked === 'indeterminate' ? true : false
+          setChecked.call(inputEl, checked === 'unchecked' ? false : true)
+          inputEl.dispatchEvent(ev)
+        }
+      },
     },
   },
 )
