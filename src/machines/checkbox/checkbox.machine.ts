@@ -1,5 +1,13 @@
 import { assign, createMachine } from 'xstate'
 
+export type Context = {
+  checked: CheckedState
+  id: string
+  name: string
+  disabled: boolean
+  required: boolean
+  value: string
+}
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
 export const machine = createMachine(
@@ -21,17 +29,17 @@ export const machine = createMachine(
         target: '.idle',
         actions: 'setChecked',
       },
+      'CONTEXT.SET': {
+        target: '.idle',
+        actions: 'setContext',
+      },
     },
     schema: {
-      context: {} as {
-        checked: CheckedState
-        id: string
-        name: string
-        disabled: boolean
-        required: boolean
-        value: string
-      },
-      events: {} as { type: 'CHECK' } | { type: 'CHECKED.SET'; value: CheckedState },
+      context: {} as Context,
+      events: {} as
+        | { type: 'CHECK' }
+        | { type: 'CHECKED.SET'; value: CheckedState }
+        | { type: 'CONTEXT.SET'; value: Partial<Context> },
     },
     context: {
       checked: 'unchecked',
@@ -62,6 +70,10 @@ export const machine = createMachine(
             return ctx.checked
           }
         },
+      }),
+      setContext: assign((ctx, ev) => {
+        if (ev.type === 'CONTEXT.SET') return ev.value
+        return ctx
       }),
     },
   },

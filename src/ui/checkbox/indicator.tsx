@@ -8,7 +8,5 @@ export const Indicator = forwardRefWithAsChild<'button'>((props, ref) => {
   const service = useContext(MachineContext)!
   const [state, send] = useActor(service)
 
-  console.log(state.context)
-
   return <Dive.button {...props} onClick={(ev) => send({ type: 'CHECK' })} ref={ref} />
 })
