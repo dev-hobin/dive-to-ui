@@ -5,7 +5,7 @@ import * as Checkbox from '../../ui/checkbox'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 
 export default function CheckboxPage() {
-  const [checked, setChecked] = useState<CheckedState>('indeterminate')
+  const [checked, setChecked] = useState<CheckedState>('checked')
   const [disabled, setDisabled] = useState<boolean>(false)
 
   return (
@@ -25,7 +25,6 @@ export default function CheckboxPage() {
           console.log(ev)
         }}
         onChange={(ev) => {
-          console.log('form', ev)
           console.log('form', ev)
         }}
       >

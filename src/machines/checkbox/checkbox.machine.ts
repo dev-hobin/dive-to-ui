@@ -7,27 +7,24 @@ export type Context = {
   disabled: boolean
   required: boolean
   value: string
-  isControlled: boolean
+  controlled: boolean
 }
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
 export const machine = createMachine(
   {
-    /** @xstate-layout N4IgpgJg5mDOIC5QGEAWYDGBrARgewA8BiZACQFFkBpcgEQDoBlcgFQG0AGAXUVAAc8sAJYAXIXgB2vEAUQAWAEwAaEAE9EARgDsW+gE4ArAGYNCgwF9zKtJlyESAeQByLcgA0WTVpx5IQA4TFJaVkERRV1BAAODXoLKxAbbHwCeiEIABswEgpqH2kA0XEpP1CFDgN6LQMIxD09fS0ANgMms0sEiTwIOGkku1D+QSLg0sQAWibahEnLa3RkwjTMsALhoJLQMp16cq0OEzNp8tjFPSao6o7zIA */
     id: 'Checkbox',
     initial: 'idle',
     states: {
       idle: {
         on: {
           CHECK: [
+            { cond: 'isDisabled' },
             {
-              cond: (ctx) => !ctx.disabled && !ctx.isControlled,
-              actions: ['setChecked', 'dispatchChange'],
-            },
-            {
-              cond: (ctx) => !ctx.disabled && ctx.isControlled,
+              cond: 'isControlled',
               actions: 'setChecked',
             },
+            { actions: ['setChecked', 'dispatchChange'] },
           ],
         },
       },
@@ -56,15 +53,15 @@ export const machine = createMachine(
       disabled: false,
       required: false,
       value: 'on',
-      isControlled: false,
+      controlled: false,
     },
     predictableActionArguments: true,
     preserveActionOrder: true,
   },
   {
     guards: {
-      isNotDisabled: (ctx) => !ctx.disabled,
-      isNotControlled: (ctx) => !ctx.isControlled,
+      isDisabled: (ctx) => ctx.disabled,
+      isControlled: (ctx) => ctx.controlled,
     },
     actions: {
       setChecked: assign({
