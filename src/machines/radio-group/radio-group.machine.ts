@@ -6,6 +6,16 @@ export type RadioItem = {
   required: boolean
 }
 
+export type Context = {
+  id: string
+  disabled: boolean
+  name: string
+  required: boolean
+  value: string
+  defaultValue: string
+  itemMap: Record<string, RadioItem>
+}
+
 export const machine = createMachine(
   {
     id: 'RadioGroup',
@@ -14,51 +24,34 @@ export const machine = createMachine(
       idle: {},
     },
     on: {
-      'ITEM.ADD': {
-        actions: 'addItem',
+      'ITEM.REGISTER': {
+        actions: 'registerItem',
       },
-      'ITEM.REMOVE': {
-        actions: 'removeItem',
+      'ITEM.UNREGISTER': {
+        actions: 'unregisterItem',
       },
-      'ITEM.UPDATE': {
-        actions: 'updateItem',
+      'ITEM.SELECT': {
+        actions: 'selectItem',
       },
-      'FOCUS.NEXT': {},
-      'FOCUS.PREVIOUS': {},
-      'ITEM.SELECT': {},
-      'FOCUS.CURRENT': {},
+      'CONTEXT.SET': {
+        actions: 'setContext',
+      },
     },
     schema: {
-      context: {} as {
-        id: string
-        disabled: boolean
-        name: string
-        required: boolean
-        value: string
-        defaultValue: string
-        currentFocusedItem: string
-        itemMap: Record<string, RadioItem>
-      },
+      context: {} as Context,
       events: {} as
-        | { type: 'ITEM.ADD'; payload: { item: RadioItem } }
-        | { type: 'ITEM.REMOVE'; payload: { value: string } }
-        | {
-            type: 'ITEM.UPDATE'
-            payload: { value: string; update: Partial<Omit<RadioItem, 'value'>> }
-          }
-        | { type: 'FOCUS.NEXT' }
-        | { type: 'FOCUS.PREVIOUS' }
-        | { type: 'ITEM.SELECT' }
-        | { type: 'FOCUS.CURRENT' },
+        | { type: 'ITEM.REGISTER'; payload: { item: RadioItem } }
+        | { type: 'ITEM.UNREGISTER'; payload: { value: string } }
+        | { type: 'CONTEXT.SET'; payload: { context: Partial<Context> } }
+        | { type: 'ITEM.SELECT'; payload: { value: string } },
     },
     context: {
-      id: 'radioGroupId',
+      id: '',
       disabled: false,
-      name: 'radioGroupName',
+      name: '',
       required: false,
-      value: 'value',
-      defaultValue: 'defaultValue',
-      currentFocusedItem: 'focusedItemValue',
+      value: '',
+      defaultValue: '',
       itemMap: {},
     },
     predictableActionArguments: true,
@@ -66,9 +59,9 @@ export const machine = createMachine(
   },
   {
     actions: {
-      addItem: assign({
+      registerItem: assign({
         itemMap: (ctx, ev) => {
-          if (ev.type === 'ITEM.ADD') {
+          if (ev.type === 'ITEM.REGISTER') {
             const { item } = ev.payload
             const addedMap = { ...ctx.itemMap }
             addedMap[item.value] = item
@@ -77,9 +70,9 @@ export const machine = createMachine(
           return ctx.itemMap
         },
       }),
-      removeItem: assign({
+      unregisterItem: assign({
         itemMap: (ctx, ev) => {
-          if (ev.type === 'ITEM.REMOVE') {
+          if (ev.type === 'ITEM.UNREGISTER') {
             const { value } = ev.payload
             const removedMap = { ...ctx.itemMap }
             delete removedMap[value]
@@ -88,18 +81,16 @@ export const machine = createMachine(
           return ctx.itemMap
         },
       }),
-      updateItem: assign({
-        itemMap: (ctx, ev) => {
-          if (ev.type === 'ITEM.UPDATE') {
-            const { value, update } = ev.payload
-            if (!ctx.itemMap[value]) return ctx.itemMap
-            if (Object.values(update).length === 0) return ctx.itemMap
-
-            const updatedMap = { ...ctx.itemMap, [value]: { ...ctx.itemMap[value], ...update } }
-            return updatedMap
-          }
-          return ctx.itemMap
+      selectItem: assign({
+        value: (ctx, ev) => {
+          if (ev.type !== 'ITEM.SELECT') return ctx.value
+          const { value } = ev.payload
+          return value
         },
+      }),
+      setContext: assign((ctx, ev) => {
+        if (ev.type === 'CONTEXT.SET') return ev.payload.context
+        return ctx
       }),
     },
   },

@@ -3,8 +3,6 @@ import { useActor } from '@xstate/react'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
 import { MachineContext } from './context'
-import { useLatestValue } from '@/hooks/use-latest-value'
-import { RadioItem } from '@/machines/radio-group/radio-group.machine'
 
 type ItemProps = {
   value: string
@@ -13,14 +11,13 @@ type ItemProps = {
 export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
   const service = useContext(MachineContext)!
   const [state, send] = useActor(service)
+  const context = state.context
 
-  const value = useLatestValue(props.value)
-  const disabled = useLatestValue(props.disabled)
-  const required = useLatestValue(props.required)
+  const { value, disabled, required, ...rest } = props
 
   useLayoutEffect(() => {
     send({
-      type: 'ITEM.ADD',
+      type: 'ITEM.REGISTER',
       payload: {
         item: {
           value: value,
@@ -31,27 +28,28 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
     })
 
     return () => {
-      send({ type: 'ITEM.REMOVE', payload: { value: value } })
+      send({ type: 'ITEM.UNREGISTER', payload: { value: value } })
     }
   }, [disabled, required, value, send])
 
-  useEffect(() => {
-    const updateInfo: Partial<RadioItem> = {}
+  console.log('render')
+  console.log(state.context.itemMap[value])
 
-    if (props.disabled !== undefined) updateInfo.disabled = props.disabled
-    if (props.required !== undefined) updateInfo.required = props.required
+  const isDisabled = context.disabled || disabled || context.itemMap[value]?.disabled
+  const isChecked = context.defaultValue === value || context.value === value
 
-    send({
-      type: 'ITEM.UPDATE',
-      payload: {
-        value: value,
-        update: updateInfo,
-      },
-    })
-  }, [props.disabled, props.required, value, send])
+  console.log('context.defaultValue', context.defaultValue)
 
   return (
-    <Dive.button role="radio" aria-checked {...props} ref={ref}>
+    <Dive.button
+      role="radio"
+      aria-checked={isChecked}
+      value={value}
+      disabled={isDisabled}
+      onClick={() => send({ type: 'ITEM.SELECT', payload: { value: value } })}
+      {...rest}
+      ref={ref}
+    >
       {props.children}
     </Dive.button>
   )
