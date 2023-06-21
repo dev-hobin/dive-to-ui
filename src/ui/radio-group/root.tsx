@@ -9,7 +9,7 @@ type RootProps = {
   children: ReactNode
   id: string
 }
-export const Root = forwardRefWithAsChild<'div', RootProps>((props: RootProps, ref) => {
+export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
   const [state, send, service] = useMachine(machine, {
     context: {},
   })

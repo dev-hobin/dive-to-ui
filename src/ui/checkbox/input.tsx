@@ -4,23 +4,26 @@ import { useActor } from '@xstate/react'
 
 type InputProps = InputHTMLAttributes<HTMLInputElement>
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const { id, disabled, required, readOnly, defaultChecked, ...rest } = props
   const service = useContext(MachineContext)!
   const [state, send] = useActor(service)
   const context = state.context
 
-  console.log('input checked', context.checked)
-  console.log('input context', context)
+  const isDisabled = disabled || context.disabled
+  const isRequired = required || context.required
+  const isDefaultChecked = defaultChecked || context.checked === 'checked'
+
   return (
     <input
-      {...props}
-      ref={ref}
-      id={context.id}
+      id={id || context.id}
       type="checkbox"
       aria-hidden
       tabIndex={-1}
-      disabled={context.disabled}
-      required={context.required}
-      defaultChecked={context.checked === 'checked'}
+      disabled={isDisabled}
+      required={isRequired}
+      defaultChecked={isDefaultChecked}
+      {...rest}
+      ref={ref}
     />
   )
 })
