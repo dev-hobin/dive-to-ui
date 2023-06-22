@@ -39,6 +39,7 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
   return (
     <Dive.button
       role="radio"
+      type="button"
       aria-checked={isChecked}
       value={value}
       disabled={isDisabled}

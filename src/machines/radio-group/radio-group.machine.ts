@@ -12,6 +12,7 @@ export type Context = {
   name: string
   required: boolean
   value: string
+  prevValue: string
   defaultValue: string
   focusedValue: string
   itemMap: Record<string, RadioItem>
@@ -22,7 +23,9 @@ export const machine = createMachine(
     id: 'RadioGroup',
     initial: 'idle',
     states: {
-      idle: {},
+      idle: {
+        entry: 'syncInput',
+      },
     },
     on: {
       'ITEM.REGISTER': {
@@ -37,14 +40,22 @@ export const machine = createMachine(
       'ITEM.BLUR': {
         actions: 'blurItem',
       },
-      'ITEM.SELECT': {
-        actions: 'selectItem',
+      'ITEM.SELECT': [
+        {
+          cond: 'isAlreadySelected',
+        },
+        {
+          actions: ['selectItem', 'syncInput', 'dispatchChange'],
+        },
+      ],
+      'ITEM.SELECT.INPUT': {
+        actions: ['syncInputToContext'],
       },
       'GOTO.NEXT': {
-        actions: ['focusNext', 'selectCurrentFocusedItem'],
+        actions: ['focusNext', 'selectCurrentFocusedItem', 'syncInput', 'dispatchChange'],
       },
       'GOTO.PREV': {
-        actions: ['focusPrev', 'selectCurrentFocusedItem'],
+        actions: ['focusPrev', 'selectCurrentFocusedItem', 'syncInput', 'dispatchChange'],
       },
       'CONTEXT.SET': {
         actions: 'setContext',
@@ -56,6 +67,7 @@ export const machine = createMachine(
         | { type: 'ITEM.REGISTER'; payload: { item: RadioItem } }
         | { type: 'ITEM.UNREGISTER'; payload: { value: string } }
         | { type: 'ITEM.SELECT'; payload: { value: string } }
+        | { type: 'ITEM.SELECT.INPUT'; payload: { value: string } }
         | { type: 'ITEM.FOCUS'; payload: { value: string } }
         | { type: 'ITEM.BLUR' }
         | { type: 'GOTO.NEXT' }
@@ -68,6 +80,7 @@ export const machine = createMachine(
       name: '',
       required: false,
       value: '',
+      prevValue: '',
       defaultValue: '',
       focusedValue: '',
       itemMap: {},
@@ -76,6 +89,13 @@ export const machine = createMachine(
     preserveActionOrder: true,
   },
   {
+    guards: {
+      isAlreadySelected: (ctx, ev) => {
+        if (ev.type !== 'ITEM.SELECT') return false
+        const { value } = ev.payload
+        return value === ctx.value
+      },
+    },
     actions: {
       registerItem: assign({
         itemMap: (ctx, ev) => {
@@ -99,19 +119,23 @@ export const machine = createMachine(
           return ctx.itemMap
         },
       }),
-      selectItem: assign({
-        value: (ctx, ev) => {
-          if (ev.type !== 'ITEM.SELECT') return ctx.value
-          const { value } = ev.payload
-          return value
-        },
+      selectItem: assign((ctx, ev) => {
+        if (ev.type !== 'ITEM.SELECT') return {}
+        console.log('selectItem')
+        const { value } = ev.payload
+        return {
+          prevValue: ctx.value,
+          value: value,
+        }
       }),
-      selectCurrentFocusedItem: assign({
-        value: () => {
-          const currentFocusedEl = document.activeElement
-          const nextValue = currentFocusedEl?.getAttribute('value') ?? ''
-          return nextValue
-        },
+      selectCurrentFocusedItem: assign((ctx) => {
+        const currentFocusedEl = document.activeElement
+        const nextValue = currentFocusedEl?.getAttribute('value') ?? ''
+
+        return {
+          value: nextValue,
+          prevValue: ctx.value,
+        }
       }),
       blurItem: assign({ focusedValue: '' }),
       setContext: assign((ctx, ev) => {
@@ -126,10 +150,12 @@ export const machine = createMachine(
         },
       }),
       focusNext: (ctx) => {
+        console.log('focusNext')
         const group = document.getElementById(ctx.id)
         const items = Array.from(
           group?.querySelectorAll('[role=radio]:not(:disabled)') ?? [],
         ) as HTMLElement[]
+        console.log('items', items)
         if (items.length === 0) return
 
         const currIndex = items.findIndex((el) => el.getAttribute('value') === ctx.focusedValue)
@@ -138,7 +164,6 @@ export const machine = createMachine(
 
         const isLastItem = items.length - 1 === currIndex
 
-        console.log(isLastItem)
         if (isLastItem) {
           items[0].focus()
         } else {
@@ -161,6 +186,50 @@ export const machine = createMachine(
           items[currIndex - 1].focus()
         }
       },
+      syncInput: (ctx) => {
+        console.log('syncInput')
+        const { prevValue, value } = ctx
+        const inputProto = window.HTMLInputElement.prototype
+        const descriptor = Object.getOwnPropertyDescriptor(
+          inputProto,
+          'checked',
+        ) as PropertyDescriptor
+        const setChecked = descriptor.set
+
+        const prevInputEl = document.getElementById(prevValue) as HTMLInputElement | null
+        const inputEl = document.getElementById(value) as HTMLInputElement | null
+
+        if (!setChecked) return
+        if (prevInputEl) setChecked.call(prevInputEl, false)
+        if (inputEl) setChecked.call(inputEl, true)
+      },
+      dispatchChange: (ctx) => {
+        console.log('dispatchChange')
+        const { value } = ctx
+
+        const inputEl = document.getElementById(value) as HTMLInputElement | null
+        const inputProto = window.HTMLInputElement.prototype
+        const descriptor = Object.getOwnPropertyDescriptor(
+          inputProto,
+          'checked',
+        ) as PropertyDescriptor
+        const setChecked = descriptor.set
+
+        if (inputEl && setChecked) {
+          const ev = new Event('click', { bubbles: true })
+          setChecked.call(inputEl, inputEl.checked)
+          inputEl.dispatchEvent(ev)
+        }
+      },
+      syncInputToContext: assign((ctx, ev) => {
+        console.log('syncInputContext')
+        if (ev.type !== 'ITEM.SELECT.INPUT') return {}
+        const { value } = ev.payload
+        return {
+          prevValue: ctx.value,
+          value: value,
+        }
+      }),
     },
   },
 )

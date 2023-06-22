@@ -5,6 +5,7 @@ import { MachineContext } from './context'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
 import { type Context as RadioGroupMachineContext } from '@/machines/radio-group/radio-group.machine'
+import { useCallbackRef } from '@/hooks/use-callback-ref'
 
 type RootProps = {
   children: ReactNode
@@ -14,37 +15,55 @@ type RootProps = {
   disabled?: boolean
   value?: string
   defaultValue?: string
+  onValueChange?: (value: string) => void
 }
 export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
+  const {
+    id,
+    name,
+    required,
+    disabled,
+    value,
+    defaultValue,
+    onValueChange = () => {},
+    children,
+    ...rest
+  } = props
   const [state, send, service] = useMachine(machine, {
     context: {
-      id: props.id,
-      name: props.name ?? '',
-      required: props.required ?? false,
-      disabled: props.disabled ?? false,
-      value: props.value ?? '',
-      defaultValue: props.defaultValue ?? '',
+      id: id,
+      name: name ?? '',
+      required: required ?? false,
+      disabled: disabled ?? false,
+      value: value ?? '',
+      defaultValue: defaultValue ?? '',
     },
   })
 
+  const dispatchValueChanged = useCallbackRef(onValueChange)
+
   useEffect(() => {
     const subscription = service.subscribe((state) => {
-      console.log(state.context)
+      dispatchValueChanged(state.context.value)
     })
 
     return subscription.unsubscribe
-  }, [service])
+  }, [dispatchValueChanged, service])
 
   useEffect(() => {
     const context: Partial<RadioGroupMachineContext> = {}
-    if (props.id !== undefined) context.id = props.id
-    if (props.name !== undefined) context.name = props.name
-    if (props.required !== undefined) context.required = props.required
-    if (props.disabled !== undefined) context.disabled = props.disabled
-    if (props.value !== undefined) context.value = props.value
-    if (props.defaultValue !== undefined) context.value = props.defaultValue
+    if (id !== undefined) context.id = id
+    if (name !== undefined) context.name = name
+    if (required !== undefined) context.required = required
+    if (disabled !== undefined) context.disabled = disabled
+    if (defaultValue !== undefined) context.value = defaultValue
     send({ type: 'CONTEXT.SET', payload: { context } })
-  }, [props.defaultValue, props.disabled, props.id, props.name, props.required, props.value, send])
+  }, [defaultValue, disabled, id, name, required, value, send])
+
+  useEffect(() => {
+    if (value === undefined) return
+    send({ type: 'ITEM.SELECT', payload: { value: value } })
+  }, [value, send])
 
   const handleKeyDown = (ev: React.KeyboardEvent<HTMLElement>) => {
     switch (ev.key) {
@@ -61,10 +80,12 @@ export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
     }
   }
 
+  console.log('CONTEXT', state.context)
+
   return (
     <MachineContext.Provider value={service}>
-      <Dive.div role="radiogroup" {...props} ref={ref} onKeyDown={handleKeyDown}>
-        {props.children}
+      <Dive.div role="radiogroup" id={id} onKeyDown={handleKeyDown} {...rest} ref={ref}>
+        {children}
       </Dive.div>
     </MachineContext.Provider>
   )
