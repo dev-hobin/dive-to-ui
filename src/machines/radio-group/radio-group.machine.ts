@@ -13,6 +13,7 @@ export type Context = {
   required: boolean
   value: string
   defaultValue: string
+  focusedValue: string
   itemMap: Record<string, RadioItem>
 }
 
@@ -30,8 +31,20 @@ export const machine = createMachine(
       'ITEM.UNREGISTER': {
         actions: 'unregisterItem',
       },
+      'ITEM.FOCUS': {
+        actions: 'updateFocusedValue',
+      },
+      'ITEM.BLUR': {
+        actions: 'blurItem',
+      },
       'ITEM.SELECT': {
         actions: 'selectItem',
+      },
+      'GOTO.NEXT': {
+        actions: ['focusNext', 'selectCurrentFocusedItem'],
+      },
+      'GOTO.PREV': {
+        actions: ['focusPrev', 'selectCurrentFocusedItem'],
       },
       'CONTEXT.SET': {
         actions: 'setContext',
@@ -42,8 +55,12 @@ export const machine = createMachine(
       events: {} as
         | { type: 'ITEM.REGISTER'; payload: { item: RadioItem } }
         | { type: 'ITEM.UNREGISTER'; payload: { value: string } }
-        | { type: 'CONTEXT.SET'; payload: { context: Partial<Context> } }
-        | { type: 'ITEM.SELECT'; payload: { value: string } },
+        | { type: 'ITEM.SELECT'; payload: { value: string } }
+        | { type: 'ITEM.FOCUS'; payload: { value: string } }
+        | { type: 'ITEM.BLUR' }
+        | { type: 'GOTO.NEXT' }
+        | { type: 'GOTO.PREV' }
+        | { type: 'CONTEXT.SET'; payload: { context: Partial<Context> } },
     },
     context: {
       id: '',
@@ -52,6 +69,7 @@ export const machine = createMachine(
       required: false,
       value: '',
       defaultValue: '',
+      focusedValue: '',
       itemMap: {},
     },
     predictableActionArguments: true,
@@ -88,10 +106,61 @@ export const machine = createMachine(
           return value
         },
       }),
+      selectCurrentFocusedItem: assign({
+        value: () => {
+          const currentFocusedEl = document.activeElement
+          const nextValue = currentFocusedEl?.getAttribute('value') ?? ''
+          return nextValue
+        },
+      }),
+      blurItem: assign({ focusedValue: '' }),
       setContext: assign((ctx, ev) => {
         if (ev.type === 'CONTEXT.SET') return ev.payload.context
         return ctx
       }),
+      updateFocusedValue: assign({
+        focusedValue: (ctx, ev) => {
+          if (ev.type !== 'ITEM.FOCUS') return ctx.focusedValue
+          const { value } = ev.payload
+          return value
+        },
+      }),
+      focusNext: (ctx) => {
+        const group = document.getElementById(ctx.id)
+        const items = Array.from(
+          group?.querySelectorAll('[role=radio]:not(:disabled)') ?? [],
+        ) as HTMLElement[]
+        if (items.length === 0) return
+
+        const currIndex = items.findIndex((el) => el.getAttribute('value') === ctx.focusedValue)
+        console.log(items[0].getAttribute('value'), ctx.focusedValue)
+        if (currIndex === -1) return
+
+        const isLastItem = items.length - 1 === currIndex
+
+        console.log(isLastItem)
+        if (isLastItem) {
+          items[0].focus()
+        } else {
+          items[currIndex + 1].focus()
+        }
+      },
+      focusPrev: (ctx) => {
+        const group = document.getElementById(ctx.id)
+        const items = Array.from(
+          group?.querySelectorAll('[role=radio]:not(:disabled)') ?? [],
+        ) as HTMLElement[]
+        if (items.length === 0) return
+        const currIndex = items.findIndex((el) => el.getAttribute('value') === ctx.focusedValue)
+        if (currIndex === -1) return
+        const isFirstItem = currIndex === 0
+
+        if (isFirstItem) {
+          items[items.length - 1].focus()
+        } else {
+          items[currIndex - 1].focus()
+        }
+      },
     },
   },
 )

@@ -32,9 +32,6 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
     }
   }, [disabled, required, value, send])
 
-  console.log('render')
-  console.log(state.context.itemMap[value])
-
   const isDisabled = context.disabled || disabled || context.itemMap[value]?.disabled
   const isChecked = context.defaultValue === value || context.value === value
   const isTabbable = !context.value || context.value === value
@@ -46,6 +43,8 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
       value={value}
       disabled={isDisabled}
       onClick={() => send({ type: 'ITEM.SELECT', payload: { value: value } })}
+      onFocus={() => send({ type: 'ITEM.FOCUS', payload: { value: value } })}
+      onBlur={() => send({ type: 'ITEM.BLUR' })}
       tabIndex={isTabbable ? 0 : -1}
       {...rest}
       ref={ref}

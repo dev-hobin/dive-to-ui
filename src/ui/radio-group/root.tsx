@@ -46,9 +46,24 @@ export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
     send({ type: 'CONTEXT.SET', payload: { context } })
   }, [props.defaultValue, props.disabled, props.id, props.name, props.required, props.value, send])
 
+  const handleKeyDown = (ev: React.KeyboardEvent<HTMLElement>) => {
+    switch (ev.key) {
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        send({ type: 'GOTO.PREV' })
+        return
+      case 'ArrowDown':
+      case 'ArrowRight':
+        send({ type: 'GOTO.NEXT' })
+        return
+      default:
+        return
+    }
+  }
+
   return (
     <MachineContext.Provider value={service}>
-      <Dive.div role="radiogroup" {...props} ref={ref}>
+      <Dive.div role="radiogroup" {...props} ref={ref} onKeyDown={handleKeyDown}>
         {props.children}
       </Dive.div>
     </MachineContext.Provider>
