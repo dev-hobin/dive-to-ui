@@ -42,6 +42,9 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
       aria-checked={isChecked}
       value={value}
       disabled={isDisabled}
+      onKeyDown={(ev) => {
+        if (ev.key === 'Enter') ev.preventDefault()
+      }}
       onClick={() => send({ type: 'ITEM.SELECT', payload: { value: value } })}
       onFocus={() => send({ type: 'ITEM.FOCUS', payload: { value: value } })}
       onBlur={() => send({ type: 'ITEM.BLUR' })}
