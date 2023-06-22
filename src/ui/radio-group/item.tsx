@@ -37,8 +37,7 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
 
   const isDisabled = context.disabled || disabled || context.itemMap[value]?.disabled
   const isChecked = context.defaultValue === value || context.value === value
-
-  console.log('context.defaultValue', context.defaultValue)
+  const isTabbable = !context.value || context.value === value
 
   return (
     <Dive.button
@@ -47,6 +46,7 @@ export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
       value={value}
       disabled={isDisabled}
       onClick={() => send({ type: 'ITEM.SELECT', payload: { value: value } })}
+      tabIndex={isTabbable ? 0 : -1}
       {...rest}
       ref={ref}
     >
