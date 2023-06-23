@@ -19,6 +19,17 @@ export default function CheckboxPage() {
       <button type="button" onClick={() => setDisabled(!disabled)}>
         disabled : {String(disabled)}
       </button>
+      <div>
+        <input type="radio" id="radio" />
+        <label
+          htmlFor="radio"
+          onClick={() => {
+            console.log('ho')
+          }}
+        >
+          hi
+        </label>
+      </div>
       <form
         onSubmit={(ev) => {
           ev.preventDefault()
@@ -36,7 +47,6 @@ export default function CheckboxPage() {
         >
           <Checkbox.Indicator>체크박스</Checkbox.Indicator>
           <Checkbox.Input />
-          <Checkbox.Label>체크박스 라벨</Checkbox.Label>
         </Checkbox.Root>
       </form>
     </main>
