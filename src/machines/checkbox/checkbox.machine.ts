@@ -19,21 +19,26 @@ export const machine = createMachine(
       idle: {
         on: {
           CHECK: [
-            { cond: 'isDisabled' },
             {
-              cond: 'isControlled',
-              actions: 'setChecked',
+              cond: 'isDisabled',
             },
-            { actions: ['setChecked', 'dispatchChange'] },
+            {
+              actions: ['setChecked', 'dispatchChange'],
+            },
           ],
         },
       },
     },
     on: {
-      'CHECKED.SET': {
-        target: '.idle',
-        actions: ['setChecked', 'dispatchChange'],
-      },
+      'CHECKED.SET': [
+        {
+          cond: (ctx, ev) => ctx.checked === ev.value,
+        },
+        {
+          target: '.idle',
+          actions: ['setChecked', 'dispatchChange'],
+        },
+      ],
       'CONTEXT.SET': {
         target: '.idle',
         actions: 'setContext',
@@ -61,7 +66,6 @@ export const machine = createMachine(
   {
     guards: {
       isDisabled: (ctx) => ctx.disabled,
-      isControlled: (ctx) => ctx.controlled,
     },
     actions: {
       setChecked: assign({

@@ -41,8 +41,6 @@ export const Root = (props: RootProps) => {
   }, [onCheckedChange, service])
 
   useEffect(() => {
-    send({ type: 'CONTEXT.SET', value: { controlled: !!props.checked } })
-
     if (props.checked === undefined) return
     send({ type: 'CHECKED.SET', value: props.checked })
   }, [props.checked, send])
