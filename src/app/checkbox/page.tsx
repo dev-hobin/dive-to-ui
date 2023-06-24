@@ -16,32 +16,20 @@ export default function CheckboxPage() {
       >
         체크상태 : {String(checked)}
       </button>
-      <button type="button" onClick={() => setDisabled(!disabled)}>
-        disabled : {String(disabled)}
-      </button>
-      <div>
-        <input type="radio" id="radio" />
-        <label
-          htmlFor="radio"
-          onClick={() => {
-            console.log('ho')
-          }}
-        >
-          hi
-        </label>
-      </div>
       <form
         onSubmit={(ev) => {
           ev.preventDefault()
           console.log(ev)
         }}
         onChange={(ev) => {
-          console.log('form', ev)
+          const formData = new FormData(ev.currentTarget)
+          console.log(formData.get('hi'))
         }}
       >
         <Checkbox.Root
           id="checkbox"
           checked={checked}
+          name="hi"
           onCheckedChange={setChecked}
           disabled={disabled}
         >

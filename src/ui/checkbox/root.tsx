@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from 'react'
-import { useMachine } from '@xstate/react'
+import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
 import {
   type CheckedState,
@@ -19,8 +19,8 @@ type RootProps = {
   disabled?: boolean
 }
 export const Root = (props: RootProps) => {
-  const [state, send, service] = useMachine(machine, {
-    context: {
+  const [_, send, actorRef] = useActor(machine, {
+    input: {
       checked: props.checked ?? 'unchecked',
       id: props.id,
       name: props.name ?? '',
@@ -33,12 +33,12 @@ export const Root = (props: RootProps) => {
   const onCheckedChange = useCallbackRef(props.onCheckedChange)
 
   useEffect(() => {
-    const subscription = service.subscribe((state) => {
+    const subscription = actorRef.subscribe((state) => {
       onCheckedChange(state.context.checked)
     })
 
     return subscription.unsubscribe
-  }, [onCheckedChange, service])
+  }, [onCheckedChange, actorRef])
 
   useEffect(() => {
     if (props.checked === undefined) return
@@ -55,5 +55,5 @@ export const Root = (props: RootProps) => {
     send({ type: 'CONTEXT.SET', value: context })
   }, [props.disabled, props.id, props.name, props.required, props.value, props.checked, send])
 
-  return <MachineContext.Provider value={service}>{props.children}</MachineContext.Provider>
+  return <MachineContext.Provider value={actorRef}>{props.children}</MachineContext.Provider>
 }

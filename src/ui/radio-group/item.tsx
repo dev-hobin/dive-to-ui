@@ -1,5 +1,5 @@
 import { useContext, useEffect, useLayoutEffect } from 'react'
-import { useActor } from '@xstate/react'
+import { useActor, useSelector } from '@xstate/react'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { Dive } from '@/core/dive'
 import { MachineContext } from './context'
@@ -9,8 +9,9 @@ type ItemProps = {
   required?: boolean
 }
 export const Item = forwardRefWithAsChild<'button', ItemProps>((props, ref) => {
-  const service = useContext(MachineContext)!
-  const [state, send] = useActor(service)
+  const actorRef = useContext(MachineContext)!
+  const state = useSelector(actorRef, (state) => state)
+  const send = actorRef.send
   const context = state.context
 
   const { value, disabled, required, ...rest } = props

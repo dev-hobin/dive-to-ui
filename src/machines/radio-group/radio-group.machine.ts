@@ -42,7 +42,7 @@ export const machine = createMachine(
       },
       'ITEM.SELECT': [
         {
-          cond: 'isAlreadySelected',
+          guard: 'isAlreadySelected',
         },
         {
           actions: ['selectItem', 'syncInput', 'dispatchChange'],
@@ -61,7 +61,7 @@ export const machine = createMachine(
         actions: 'setContext',
       },
     },
-    schema: {
+    types: {
       context: {} as Context,
       events: {} as
         | { type: 'ITEM.REGISTER'; payload: { item: RadioItem } }
@@ -85,81 +85,79 @@ export const machine = createMachine(
       focusedValue: '',
       itemMap: {},
     },
-    predictableActionArguments: true,
-    preserveActionOrder: true,
   },
   {
     guards: {
-      isAlreadySelected: (ctx, ev) => {
-        if (ev.type !== 'ITEM.SELECT') return false
-        const { value } = ev.payload
-        return value === ctx.value
+      isAlreadySelected: ({ context, event }) => {
+        if (event.type !== 'ITEM.SELECT') return false
+        const { value } = event.payload
+        return value === context.value
       },
     },
     actions: {
       registerItem: assign({
-        itemMap: (ctx, ev) => {
-          if (ev.type === 'ITEM.REGISTER') {
-            const { item } = ev.payload
-            const addedMap = { ...ctx.itemMap }
+        itemMap: ({ context, event }) => {
+          if (event.type === 'ITEM.REGISTER') {
+            const { item } = event.payload
+            const addedMap = { ...context.itemMap }
             addedMap[item.value] = item
             return addedMap
           }
-          return ctx.itemMap
+          return context.itemMap
         },
       }),
       unregisterItem: assign({
-        itemMap: (ctx, ev) => {
-          if (ev.type === 'ITEM.UNREGISTER') {
-            const { value } = ev.payload
-            const removedMap = { ...ctx.itemMap }
+        itemMap: ({ context, event }) => {
+          if (event.type === 'ITEM.UNREGISTER') {
+            const { value } = event.payload
+            const removedMap = { ...context.itemMap }
             delete removedMap[value]
             return removedMap
           }
-          return ctx.itemMap
+          return context.itemMap
         },
       }),
-      selectItem: assign((ctx, ev) => {
-        if (ev.type !== 'ITEM.SELECT') return {}
+      selectItem: assign(({ context, event }) => {
+        if (event.type !== 'ITEM.SELECT') return {}
         console.log('selectItem')
-        const { value } = ev.payload
+        const { value } = event.payload
         return {
-          prevValue: ctx.value,
+          prevValue: context.value,
           value: value,
         }
       }),
-      selectCurrentFocusedItem: assign((ctx) => {
+      selectCurrentFocusedItem: assign(({ context }) => {
         const currentFocusedEl = document.activeElement
         const nextValue = currentFocusedEl?.getAttribute('value') ?? ''
 
         return {
           value: nextValue,
-          prevValue: ctx.value,
+          prevValue: context.value,
         }
       }),
       blurItem: assign({ focusedValue: '' }),
-      setContext: assign((ctx, ev) => {
-        if (ev.type === 'CONTEXT.SET') return ev.payload.context
-        return ctx
+      setContext: assign(({ context, event }) => {
+        if (event.type === 'CONTEXT.SET') return event.payload.context
+        return context
       }),
       updateFocusedValue: assign({
-        focusedValue: (ctx, ev) => {
-          if (ev.type !== 'ITEM.FOCUS') return ctx.focusedValue
-          const { value } = ev.payload
+        focusedValue: ({ context, event }) => {
+          if (event.type !== 'ITEM.FOCUS') return context.focusedValue
+          const { value } = event.payload
           return value
         },
       }),
-      focusNext: (ctx) => {
+      focusNext: ({ context }) => {
         console.log('focusNext')
-        const group = document.getElementById(ctx.id)
+        const group = document.getElementById(context.id)
         const items = Array.from(
           group?.querySelectorAll('[role=radio]:not(:disabled)') ?? [],
         ) as HTMLElement[]
         console.log('items', items)
         if (items.length === 0) return
 
-        const currIndex = items.findIndex((el) => el.getAttribute('value') === ctx.focusedValue)
-        console.log(items[0].getAttribute('value'), ctx.focusedValue)
+        const currIndex = items.findIndex((el) => el.getAttribute('value') === context.focusedValue)
+        console.log(items[0].getAttribute('value'), context.focusedValue)
         if (currIndex === -1) return
 
         const isLastItem = items.length - 1 === currIndex
@@ -170,13 +168,13 @@ export const machine = createMachine(
           items[currIndex + 1].focus()
         }
       },
-      focusPrev: (ctx) => {
-        const group = document.getElementById(ctx.id)
+      focusPrev: ({ context }) => {
+        const group = document.getElementById(context.id)
         const items = Array.from(
           group?.querySelectorAll('[role=radio]:not(:disabled)') ?? [],
         ) as HTMLElement[]
         if (items.length === 0) return
-        const currIndex = items.findIndex((el) => el.getAttribute('value') === ctx.focusedValue)
+        const currIndex = items.findIndex((el) => el.getAttribute('value') === context.focusedValue)
         if (currIndex === -1) return
         const isFirstItem = currIndex === 0
 
@@ -186,9 +184,9 @@ export const machine = createMachine(
           items[currIndex - 1].focus()
         }
       },
-      syncInput: (ctx) => {
+      syncInput: ({ context }) => {
         console.log('syncInput')
-        const { prevValue, value } = ctx
+        const { prevValue, value } = context
         const inputProto = window.HTMLInputElement.prototype
         const descriptor = Object.getOwnPropertyDescriptor(
           inputProto,
@@ -203,9 +201,9 @@ export const machine = createMachine(
         if (prevInputEl) setChecked.call(prevInputEl, false)
         if (inputEl) setChecked.call(inputEl, true)
       },
-      dispatchChange: (ctx) => {
+      dispatchChange: ({ context }) => {
         console.log('dispatchChange')
-        const { value } = ctx
+        const { value } = context
 
         const inputEl = document.getElementById(value) as HTMLInputElement | null
         const inputProto = window.HTMLInputElement.prototype
@@ -221,12 +219,12 @@ export const machine = createMachine(
           inputEl.dispatchEvent(ev)
         }
       },
-      syncInputToContext: assign((ctx, ev) => {
+      syncInputToContext: assign(({ context, event }) => {
         console.log('syncInputContext')
-        if (ev.type !== 'ITEM.SELECT.INPUT') return {}
-        const { value } = ev.payload
+        if (event.type !== 'ITEM.SELECT.INPUT') return {}
+        const { value } = event.payload
         return {
-          prevValue: ctx.value,
+          prevValue: context.value,
           value: value,
         }
       }),

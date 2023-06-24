@@ -1,12 +1,13 @@
 import { forwardRef, InputHTMLAttributes, useContext } from 'react'
 import { MachineContext } from './context'
-import { useActor } from '@xstate/react'
+import { useSelector } from '@xstate/react'
 
 type InputProps = InputHTMLAttributes<HTMLInputElement>
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const { id, disabled, required, defaultChecked, ...rest } = props
-  const service = useContext(MachineContext)!
-  const [state, send] = useActor(service)
+  const actorRef = useContext(MachineContext)!
+  const state = useSelector(actorRef, (state) => state)
+  const send = actorRef.send
   const context = state.context
 
   const isDisabled = disabled || context.disabled
@@ -18,6 +19,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       id={context.id}
       type="checkbox"
       aria-hidden
+      name={context.name}
       tabIndex={-1}
       disabled={isDisabled}
       required={isRequired}

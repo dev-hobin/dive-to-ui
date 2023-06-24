@@ -7,7 +7,6 @@ export type Context = {
   disabled: boolean
   required: boolean
   value: string
-  controlled: boolean
 }
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
@@ -20,7 +19,7 @@ export const machine = createMachine(
         on: {
           CHECK: [
             {
-              cond: 'isDisabled',
+              guard: 'isDisabled',
             },
             {
               actions: ['setChecked', 'dispatchChange'],
@@ -32,7 +31,7 @@ export const machine = createMachine(
     on: {
       'CHECKED.SET': [
         {
-          cond: (ctx, ev) => ctx.checked === ev.value,
+          guard: ({ context, event }) => context.checked === event.value,
         },
         {
           target: '.idle',
@@ -44,51 +43,48 @@ export const machine = createMachine(
         actions: 'setContext',
       },
     },
-    schema: {
+    types: {
       context: {} as Context,
       events: {} as
         | { type: 'CHECK' }
         | { type: 'CHECKED.SET'; value: CheckedState }
         | { type: 'CONTEXT.SET'; value: Partial<Context> },
     },
-    context: {
-      checked: 'unchecked',
-      id: 'checkboxId',
-      name: 'inputName',
-      disabled: false,
-      required: false,
-      value: 'on',
-      controlled: false,
-    },
-    predictableActionArguments: true,
-    preserveActionOrder: true,
+    context: ({ input }) => ({
+      checked: input.checked ?? 'unchecked',
+      id: input.id ?? '',
+      name: input.name ?? 'inputName',
+      disabled: input.disabled ?? false,
+      required: input.required ?? false,
+      value: input.value ?? 'on',
+    }),
   },
   {
     guards: {
-      isDisabled: (ctx) => ctx.disabled,
+      isDisabled: ({ context }) => context.disabled,
     },
     actions: {
       setChecked: assign({
-        checked: (ctx, ev) => {
-          if (ev.type === 'CHECK') {
-            if (ctx.checked === 'checked') return 'unchecked'
-            if (ctx.checked === 'unchecked') return 'checked'
+        checked: ({ context, event }) => {
+          if (event.type === 'CHECK') {
+            if (context.checked === 'checked') return 'unchecked'
+            if (context.checked === 'unchecked') return 'checked'
             return 'checked'
-          } else if (ev.type === 'CHECKED.SET') {
-            const checked = ev.value
+          } else if (event.type === 'CHECKED.SET') {
+            const checked = event.value
             return checked
           } else {
-            return ctx.checked
+            return context.checked
           }
         },
       }),
-      setContext: assign((ctx, ev) => {
-        if (ev.type === 'CONTEXT.SET') return ev.value
-        return ctx
+      setContext: assign(({ context, event }) => {
+        if (event.type !== 'CONTEXT.SET') return context
+        return event.value
       }),
 
-      dispatchChange: (ctx) => {
-        const { id, checked } = ctx
+      dispatchChange: ({ context }) => {
+        const { id, checked } = context
         console.log('dispatchChange')
 
         const inputEl = document.getElementById(id) as HTMLInputElement | null

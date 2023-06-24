@@ -1,5 +1,5 @@
 import { machine } from '@/machines/radio-group'
-import { useMachine } from '@xstate/react'
+import { useActor, useMachine } from '@xstate/react'
 import { ReactNode, useEffect } from 'react'
 import { MachineContext } from './context'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
@@ -29,8 +29,8 @@ export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
     children,
     ...rest
   } = props
-  const [state, send, service] = useMachine(machine, {
-    context: {
+  const [state, send, service] = useActor(machine, {
+    input: {
       id: id,
       name: name ?? '',
       required: required ?? false,
