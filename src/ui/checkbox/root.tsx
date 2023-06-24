@@ -3,7 +3,6 @@ import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
 import { MachineContext } from './context'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
-import { useCallbackRef } from '@/hooks/use-callback-ref'
 
 type RootProps = {
   children: ReactNode
@@ -15,14 +14,12 @@ type RootProps = {
 export const Root = (props: RootProps) => {
   const { id, name, children, checked, onChange } = props
 
-  const onCheckedChange = useCallbackRef(onChange)
-
   const [state, send, actorRef] = useActor(machine, {
     input: {
       id: id,
       name: name,
       checked: getCheckedState(checked),
-      onCheckedChange: onCheckedChange,
+      onCheckedChange: onChange,
     },
   })
 
@@ -35,6 +32,10 @@ export const Root = (props: RootProps) => {
       send({ type: 'CHECKED.SET', value: nextChecked })
     }
   }, [actorRef, checked, send])
+
+  useEffect(() => {
+    send({ type: 'CONTEXT.SET', context: { id, name, onCheckedChange: onChange } })
+  }, [id, name, onChange, send])
 
   return (
     <MachineContext.Provider value={actorRef}>

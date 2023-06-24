@@ -2,6 +2,13 @@ import { assign, createMachine } from 'xstate'
 
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
+type Context = {
+  id: string
+  name: string | undefined
+  checkedState: CheckedState
+  onCheckedChange?: (checkedState: CheckedState) => void
+}
+
 export const machine = createMachine(
   {
     id: 'Checkbox',
@@ -30,20 +37,19 @@ export const machine = createMachine(
               actions: ['setCheckedState', 'syncInputState'],
             },
           ],
+          'CONTEXT.SET': {
+            actions: ['setContext'],
+          },
         },
       },
     },
     types: {
-      context: {} as {
-        id: string
-        name: string | undefined
-        checkedState: CheckedState
-        onCheckedChange?: (checkedState: CheckedState) => void
-      },
+      context: {} as Context,
       events: {} as
         | { type: 'CHECK' }
         | { type: 'INPUT.CHECK'; value: CheckedState }
-        | { type: 'CHECKED.SET'; value: CheckedState },
+        | { type: 'CHECKED.SET'; value: CheckedState }
+        | { type: 'CONTEXT.SET'; context: Partial<Context> },
     },
     context: ({ input }) => ({
       id: input?.id ?? '',
@@ -104,6 +110,10 @@ export const machine = createMachine(
         console.log('invokeOnChange')
         context.onCheckedChange?.(context.checkedState)
       },
+      setContext: assign(({ event }) => {
+        if (event.type !== 'CONTEXT.SET') return {}
+        return event.context
+      }),
     },
   },
 )
