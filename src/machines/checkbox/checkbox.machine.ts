@@ -1,14 +1,13 @@
 import { assign, createMachine } from 'xstate'
 
-export type Context = {
-  checked: CheckedState
-  id: string
-  name: string
-  disabled: boolean
-  required: boolean
-  value: string
-}
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
+
+type Context = {
+  id: string
+  name: string | undefined
+  checkedState: CheckedState
+  onCheckedChange?: (checkedState: CheckedState) => void
+}
 
 export const machine = createMachine(
   {
@@ -19,75 +18,69 @@ export const machine = createMachine(
         on: {
           CHECK: [
             {
-              guard: 'isDisabled',
+              guard: 'withForm',
+              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState', 'dispatchChange'],
             },
             {
-              actions: ['setChecked', 'dispatchChange'],
+              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState'],
             },
           ],
+          'INPUT.CHECK': {
+            actions: ['setCheckedState', 'invokeOnChange'],
+          },
+          'CHECKED.SET': [
+            {
+              guard: 'withForm',
+              actions: ['setCheckedState', 'syncInputState', 'dispatchChange'],
+            },
+            {
+              actions: ['setCheckedState', 'syncInputState'],
+            },
+          ],
+          'CONTEXT.SET': {
+            actions: ['setContext'],
+          },
         },
-      },
-    },
-    on: {
-      'CHECKED.SET': [
-        {
-          guard: ({ context, event }) => context.checked === event.value,
-        },
-        {
-          target: '.idle',
-          actions: ['setChecked', 'dispatchChange'],
-        },
-      ],
-      'CONTEXT.SET': {
-        target: '.idle',
-        actions: 'setContext',
       },
     },
     types: {
       context: {} as Context,
       events: {} as
         | { type: 'CHECK' }
+        | { type: 'INPUT.CHECK'; value: CheckedState }
         | { type: 'CHECKED.SET'; value: CheckedState }
-        | { type: 'CONTEXT.SET'; value: Partial<Context> },
+        | { type: 'CONTEXT.SET'; context: Partial<Context> },
     },
     context: ({ input }) => ({
-      checked: input.checked ?? 'unchecked',
-      id: input.id ?? '',
-      name: input.name ?? 'inputName',
-      disabled: input.disabled ?? false,
-      required: input.required ?? false,
-      value: input.value ?? 'on',
+      id: input?.id ?? '',
+      name: input?.name ?? undefined,
+      checkedState: input?.checkedState ?? 'unchecked',
+      onCheckedChange: input?.onCheckedChange,
     }),
   },
   {
     guards: {
-      isDisabled: ({ context }) => context.disabled,
+      withForm: ({ context }) => !!context.name,
     },
     actions: {
-      setChecked: assign({
-        checked: ({ context, event }) => {
-          if (event.type === 'CHECK') {
-            if (context.checked === 'checked') return 'unchecked'
-            if (context.checked === 'unchecked') return 'checked'
-            return 'checked'
-          } else if (event.type === 'CHECKED.SET') {
-            const checked = event.value
-            return checked
-          } else {
-            return context.checked
-          }
-        },
+      updateCheckedState: assign(({ context }) => {
+        console.log('updateCheckedState', context)
+        const { checkedState } = context
+        switch (checkedState) {
+          case 'indeterminate':
+          case 'unchecked':
+            return { checkedState: 'checked' as CheckedState }
+          case 'checked':
+          default:
+            return { checkedState: 'unchecked' as CheckedState }
+        }
       }),
-      setContext: assign(({ context, event }) => {
-        if (event.type !== 'CONTEXT.SET') return context
-        return event.value
-      }),
-
-      dispatchChange: ({ context }) => {
-        const { id, checked } = context
-        console.log('dispatchChange')
-
+      syncInputState: ({ context }) => {
+        console.log('syncInputState')
+        const { id, checkedState } = context
         const inputEl = document.getElementById(id) as HTMLInputElement | null
+        if (!inputEl) return
+
         const inputProto = window.HTMLInputElement.prototype
         const descriptor = Object.getOwnPropertyDescriptor(
           inputProto,
@@ -95,13 +88,35 @@ export const machine = createMachine(
         ) as PropertyDescriptor
         const setChecked = descriptor.set
 
-        if (inputEl && setChecked) {
-          const ev = new Event('click', { bubbles: true })
-          inputEl.indeterminate = checked === 'indeterminate' ? true : false
-          setChecked.call(inputEl, checked === 'unchecked' ? false : true)
-          inputEl.dispatchEvent(ev)
-        }
+        if (!setChecked) return
+        setChecked.call(inputEl, isChecked(checkedState))
+        inputEl.indeterminate = isIndeterminate(checkedState)
       },
+      dispatchChange: ({ context }) => {
+        console.log('dispatchChange')
+        const { id } = context
+        const inputEl = document.getElementById(id) as HTMLInputElement | null
+        if (!inputEl) return
+
+        const ev = new Event('click', { bubbles: true })
+        inputEl.dispatchEvent(ev)
+      },
+      setCheckedState: assign(({ context, event }) => {
+        if (event.type !== 'INPUT.CHECK' && event.type !== 'CHECKED.SET') return {}
+        if (context.checkedState === event.value) return {}
+        return { checkedState: event.value }
+      }),
+      invokeOnChange: ({ context }) => {
+        console.log('invokeOnChange')
+        context.onCheckedChange?.(context.checkedState)
+      },
+      setContext: assign(({ event }) => {
+        if (event.type !== 'CONTEXT.SET') return {}
+        return event.context
+      }),
     },
   },
 )
+
+const isChecked = (checkedState: CheckedState) => checkedState === 'checked'
+const isIndeterminate = (checkedState: CheckedState) => checkedState === 'indeterminate'

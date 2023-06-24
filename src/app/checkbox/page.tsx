@@ -1,39 +1,36 @@
 'use client'
 
 import { useState } from 'react'
-import * as Checkbox from '../../ui/checkbox'
+import * as Checkbox from '@/ui/checkbox'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 
 export default function CheckboxPage() {
-  const [checked, setChecked] = useState<CheckedState>('checked')
-  const [disabled, setDisabled] = useState<boolean>(false)
+  const [checked, setChecked] = useState<CheckedState>('unchecked')
 
   return (
     <main>
-      <button
-        type="button"
-        onClick={() => setChecked((prev) => (prev === 'checked' ? 'unchecked' : 'checked'))}
-      >
-        체크상태 : {String(checked)}
-      </button>
+      <div>
+        <button
+          type="button"
+          onClick={() => setChecked((prev) => (prev === 'checked' ? 'unchecked' : 'checked'))}
+        >
+          체크 {String(checked)}
+        </button>
+      </div>
       <form
-        onSubmit={(ev) => {
-          ev.preventDefault()
-          console.log(ev)
-        }}
         onChange={(ev) => {
-          const formData = new FormData(ev.currentTarget)
-          console.log(formData.get('hi'))
+          const data = new FormData(ev.currentTarget)
+          console.log('form change event: ', data.get('checkbox-name'))
         }}
       >
         <Checkbox.Root
-          id="checkbox"
+          id="checkbox-id"
+          name="checkbox-name"
           checked={checked}
-          name="hi"
-          onCheckedChange={setChecked}
-          disabled={disabled}
+          onChange={setChecked}
         >
           <Checkbox.Indicator>체크박스</Checkbox.Indicator>
+          <label htmlFor="checkbox-id">라벨</label>
           <Checkbox.Input />
         </Checkbox.Root>
       </form>

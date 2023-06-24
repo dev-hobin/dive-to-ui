@@ -1,59 +1,54 @@
 import { ReactNode, useEffect } from 'react'
 import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
-import {
-  type CheckedState,
-  type Context as CheckboxMachineContext,
-} from '@/machines/checkbox/checkbox.machine'
-import { useCallbackRef } from '@/hooks/use-callback-ref'
 import { MachineContext } from './context'
+import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 
 type RootProps = {
   children: ReactNode
   id: string
-  checked?: CheckedState
-  onCheckedChange?: (checked: CheckedState) => void
   name?: string
-  required?: boolean
-  value?: string
-  disabled?: boolean
+  checked?: boolean | CheckedState
+  onChange?: (checked: CheckedState) => void
 }
 export const Root = (props: RootProps) => {
-  const [_, send, actorRef] = useActor(machine, {
+  const { id, name, children, checked, onChange } = props
+
+  const [state, send, actorRef] = useActor(machine, {
     input: {
-      checked: props.checked ?? 'unchecked',
-      id: props.id,
-      name: props.name ?? '',
-      disabled: props.disabled ?? false,
-      required: props.required ?? false,
-      value: props.value ?? 'on',
+      id: id,
+      name: name,
+      checked: getCheckedState(checked),
+      onCheckedChange: onChange,
     },
   })
 
-  const onCheckedChange = useCallbackRef(props.onCheckedChange)
+  useEffect(() => {
+    const snapshot = actorRef.getSnapshot()
+    if (!snapshot) return
+
+    const nextChecked = getCheckedState(checked)
+    if (snapshot.context.checkedState !== nextChecked) {
+      send({ type: 'CHECKED.SET', value: nextChecked })
+    }
+  }, [actorRef, checked, send])
 
   useEffect(() => {
-    const subscription = actorRef.subscribe((state) => {
-      onCheckedChange(state.context.checked)
-    })
+    send({ type: 'CONTEXT.SET', context: { id, name, onCheckedChange: onChange } })
+  }, [id, name, onChange, send])
 
-    return subscription.unsubscribe
-  }, [onCheckedChange, actorRef])
+  return (
+    <MachineContext.Provider value={actorRef}>
+      <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre>
+      {children}
+    </MachineContext.Provider>
+  )
+}
 
-  useEffect(() => {
-    if (props.checked === undefined) return
-    send({ type: 'CHECKED.SET', value: props.checked })
-  }, [props.checked, send])
-
-  useEffect(() => {
-    const context: Partial<CheckboxMachineContext> = {}
-    if (props.disabled !== undefined) context.disabled = props.disabled
-    if (props.id !== undefined) context.id = props.id
-    if (props.name !== undefined) context.name = props.name
-    if (props.required !== undefined) context.required = props.required
-    if (props.value !== undefined) context.value = props.value
-    send({ type: 'CONTEXT.SET', value: context })
-  }, [props.disabled, props.id, props.name, props.required, props.value, props.checked, send])
-
-  return <MachineContext.Provider value={actorRef}>{props.children}</MachineContext.Provider>
+const getCheckedState = (checked: RootProps['checked']): CheckedState => {
+  if (!checked) return 'unchecked'
+  if (typeof checked === 'boolean') {
+    return checked ? 'checked' : 'unchecked'
+  }
+  return checked
 }
