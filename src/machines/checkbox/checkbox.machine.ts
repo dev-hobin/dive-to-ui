@@ -2,7 +2,6 @@ import { assign, createMachine } from 'xstate'
 
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
-type Events = { type: 'CHECK' } | { type: 'INPUT.CHECK'; value: CheckedState }
 export const machine = createMachine(
   {
     id: 'Checkbox',
@@ -13,15 +12,24 @@ export const machine = createMachine(
           CHECK: [
             {
               guard: 'withForm',
-              actions: ['updateCheckedState', 'syncInputState', 'dispatchChange'],
+              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState', 'dispatchChange'],
             },
             {
-              actions: ['updateCheckedState', 'syncInputState'],
+              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState'],
             },
           ],
           'INPUT.CHECK': {
-            actions: ['setCheckedState'],
+            actions: ['setCheckedState', 'invokeOnChange'],
           },
+          'CHECKED.SET': [
+            {
+              guard: 'withForm',
+              actions: ['setCheckedState', 'syncInputState', 'dispatchChange'],
+            },
+            {
+              actions: ['setCheckedState', 'syncInputState'],
+            },
+          ],
         },
       },
     },
@@ -30,13 +38,18 @@ export const machine = createMachine(
         id: string
         name: string | undefined
         checkedState: CheckedState
+        onCheckedChange?: (checkedState: CheckedState) => void
       },
-      events: {} as { type: 'CHECK' } | { type: 'INPUT.CHECK'; value: CheckedState },
+      events: {} as
+        | { type: 'CHECK' }
+        | { type: 'INPUT.CHECK'; value: CheckedState }
+        | { type: 'CHECKED.SET'; value: CheckedState },
     },
     context: ({ input }) => ({
       id: input?.id ?? '',
       name: input?.name ?? undefined,
       checkedState: input?.checkedState ?? 'unchecked',
+      onCheckedChange: input?.onCheckedChange,
     }),
   },
   {
@@ -83,10 +96,14 @@ export const machine = createMachine(
         inputEl.dispatchEvent(ev)
       },
       setCheckedState: assign(({ context, event }) => {
-        if (event.type !== 'INPUT.CHECK') return {}
+        if (event.type !== 'INPUT.CHECK' && event.type !== 'CHECKED.SET') return {}
         if (context.checkedState === event.value) return {}
         return { checkedState: event.value }
       }),
+      invokeOnChange: ({ context }) => {
+        console.log('invokeOnChange')
+        context.onCheckedChange?.(context.checkedState)
+      },
     },
   },
 )
