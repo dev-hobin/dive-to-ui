@@ -1,59 +1,26 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode } from 'react'
 import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
-import {
-  type CheckedState,
-  type Context as CheckboxMachineContext,
-} from '@/machines/checkbox/checkbox.machine'
-import { useCallbackRef } from '@/hooks/use-callback-ref'
 import { MachineContext } from './context'
 
 type RootProps = {
   children: ReactNode
   id: string
-  checked?: CheckedState
-  onCheckedChange?: (checked: CheckedState) => void
   name?: string
-  required?: boolean
-  value?: string
-  disabled?: boolean
 }
 export const Root = (props: RootProps) => {
-  const [_, send, actorRef] = useActor(machine, {
+  const { id, name, children } = props
+  const [state, send, actorRef] = useActor(machine, {
     input: {
-      checked: props.checked ?? 'unchecked',
-      id: props.id,
-      name: props.name ?? '',
-      disabled: props.disabled ?? false,
-      required: props.required ?? false,
-      value: props.value ?? 'on',
+      id: id,
+      name: name,
     },
   })
 
-  const onCheckedChange = useCallbackRef(props.onCheckedChange)
-
-  useEffect(() => {
-    const subscription = actorRef.subscribe((state) => {
-      onCheckedChange(state.context.checked)
-    })
-
-    return subscription.unsubscribe
-  }, [onCheckedChange, actorRef])
-
-  useEffect(() => {
-    if (props.checked === undefined) return
-    send({ type: 'CHECKED.SET', value: props.checked })
-  }, [props.checked, send])
-
-  useEffect(() => {
-    const context: Partial<CheckboxMachineContext> = {}
-    if (props.disabled !== undefined) context.disabled = props.disabled
-    if (props.id !== undefined) context.id = props.id
-    if (props.name !== undefined) context.name = props.name
-    if (props.required !== undefined) context.required = props.required
-    if (props.value !== undefined) context.value = props.value
-    send({ type: 'CONTEXT.SET', value: context })
-  }, [props.disabled, props.id, props.name, props.required, props.value, props.checked, send])
-
-  return <MachineContext.Provider value={actorRef}>{props.children}</MachineContext.Provider>
+  return (
+    <MachineContext.Provider value={actorRef}>
+      <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre>
+      {children}
+    </MachineContext.Provider>
+  )
 }

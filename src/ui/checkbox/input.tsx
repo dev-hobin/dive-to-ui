@@ -4,38 +4,25 @@ import { useSelector } from '@xstate/react'
 
 type InputProps = InputHTMLAttributes<HTMLInputElement>
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
-  const { id, disabled, required, defaultChecked, ...rest } = props
   const actorRef = useContext(MachineContext)!
   const state = useSelector(actorRef, (state) => state)
-  const send = actorRef.send
   const context = state.context
-
-  const isDisabled = disabled || context.disabled
-  const isRequired = required || context.required
-  const isDefaultChecked = defaultChecked || context.checked === 'checked'
+  const send = actorRef.send
 
   return (
     <input
       id={context.id}
-      type="checkbox"
-      aria-hidden
       name={context.name}
+      type="checkbox"
       tabIndex={-1}
-      disabled={isDisabled}
-      required={isRequired}
-      defaultChecked={isDefaultChecked}
       onChange={(ev) => {
-        if (ev.currentTarget.indeterminate) {
-          send({ type: 'CHECKED.SET', value: 'indeterminate' })
+        if (ev.target.indeterminate) {
+          send({ type: 'INPUT.CHECK', value: 'indeterminate' })
         } else {
-          if (ev.currentTarget.checked) {
-            send({ type: 'CHECKED.SET', value: 'checked' })
-          } else {
-            send({ type: 'CHECKED.SET', value: 'unchecked' })
-          }
+          send({ type: 'INPUT.CHECK', value: ev.target.checked ? 'checked' : 'unchecked' })
         }
       }}
-      {...rest}
+      {...props}
       ref={ref}
     />
   )
