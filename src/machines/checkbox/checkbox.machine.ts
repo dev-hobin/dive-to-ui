@@ -16,27 +16,15 @@ export const machine = createMachine(
     states: {
       idle: {
         on: {
-          CHECK: [
-            {
-              guard: 'withForm',
-              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState', 'dispatchChange'],
-            },
-            {
-              actions: ['updateCheckedState', 'invokeOnChange', 'syncInputState'],
-            },
-          ],
+          CHECK: {
+            actions: ['updateCheckedState', 'dispatchChange', 'syncInputState', 'invokeOnChange'],
+          },
           'INPUT.CHECK': {
             actions: ['setCheckedState', 'invokeOnChange'],
           },
-          'CHECKED.SET': [
-            {
-              guard: 'withForm',
-              actions: ['setCheckedState', 'syncInputState', 'dispatchChange'],
-            },
-            {
-              actions: ['setCheckedState', 'syncInputState'],
-            },
-          ],
+          'CHECKED.SET': {
+            actions: ['setCheckedState', 'dispatchChange', 'syncInputState'],
+          },
           'CONTEXT.SET': {
             actions: ['setContext'],
           },
@@ -59,9 +47,6 @@ export const machine = createMachine(
     }),
   },
   {
-    guards: {
-      withForm: ({ context }) => !!context.name,
-    },
     actions: {
       updateCheckedState: assign(({ context }) => {
         console.log('updateCheckedState', context)
@@ -81,6 +66,15 @@ export const machine = createMachine(
         const inputEl = document.getElementById(id) as HTMLInputElement | null
         if (!inputEl) return
 
+        inputEl.checked = isChecked(checkedState)
+        inputEl.indeterminate = isIndeterminate(checkedState)
+      },
+      dispatchChange: ({ context }) => {
+        console.log('dispatchChange')
+        const { id, checkedState } = context
+        const inputEl = document.getElementById(id) as HTMLInputElement | null
+        if (!inputEl) return
+
         const inputProto = window.HTMLInputElement.prototype
         const descriptor = Object.getOwnPropertyDescriptor(
           inputProto,
@@ -90,18 +84,11 @@ export const machine = createMachine(
 
         if (!setChecked) return
         setChecked.call(inputEl, isChecked(checkedState))
-        inputEl.indeterminate = isIndeterminate(checkedState)
-      },
-      dispatchChange: ({ context }) => {
-        console.log('dispatchChange')
-        const { id } = context
-        const inputEl = document.getElementById(id) as HTMLInputElement | null
-        if (!inputEl) return
-
         const ev = new Event('click', { bubbles: true })
         inputEl.dispatchEvent(ev)
       },
       setCheckedState: assign(({ context, event }) => {
+        console.log('setCheckedState')
         if (event.type !== 'INPUT.CHECK' && event.type !== 'CHECKED.SET') return {}
         if (context.checkedState === event.value) return {}
         return { checkedState: event.value }
