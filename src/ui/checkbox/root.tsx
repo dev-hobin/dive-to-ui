@@ -35,8 +35,19 @@ export const Root = (props: RootProps) => {
   }, [actorRef, checked, send])
 
   useEffect(() => {
-    send({ type: 'CONTEXT.SET', context: { id, name, onCheckedChange: onChange } })
-  }, [id, name, onChange, send])
+    if (id === undefined) return
+    send({ type: 'CONTEXT.SET', context: { id } })
+  }, [id, send])
+
+  useEffect(() => {
+    if (name === undefined) return
+    send({ type: 'CONTEXT.SET', context: { name } })
+  }, [name, send])
+
+  useEffect(() => {
+    if (onChange === undefined) return
+    send({ type: 'CONTEXT.SET', context: { onCheckedChange: onChange } })
+  }, [onChange, send])
 
   const {} = useCheckbox(state, send)
 
