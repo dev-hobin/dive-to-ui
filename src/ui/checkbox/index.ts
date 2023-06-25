@@ -1,3 +1,3 @@
-export { Root } from './root'
-export { Indicator } from './indicator'
-export { Input } from './input'
+export { Root } from './checkbox-root'
+export { Indicator } from './checkbox-indicator'
+export { Input } from './checkbox-input'
