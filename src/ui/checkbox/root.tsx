@@ -3,6 +3,7 @@ import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
 import { MachineContext } from './context'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
+import { useCheckbox } from './use-checkbox'
 
 type RootProps = {
   children: ReactNode
@@ -36,6 +37,8 @@ export const Root = (props: RootProps) => {
   useEffect(() => {
     send({ type: 'CONTEXT.SET', context: { id, name, onCheckedChange: onChange } })
   }, [id, name, onChange, send])
+
+  const {} = useCheckbox(state, send)
 
   return (
     <MachineContext.Provider value={actorRef}>
