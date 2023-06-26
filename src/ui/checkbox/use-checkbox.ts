@@ -3,6 +3,8 @@ import { machine } from '@/machines/checkbox'
 import { Context } from '@/machines/checkbox/checkbox.machine'
 import { useEffect } from 'react'
 
+export type UseCheckboxReturn = ReturnType<typeof useCheckbox>
+
 export const useCheckbox = (props: Context) => {
   const [state, send, actorRef] = useActor(machine, {
     input: {
@@ -15,10 +17,6 @@ export const useCheckbox = (props: Context) => {
 
   const id = state.context.id
   const name = state.context.name
-  const checkedState = state.context.checkedState
-  const isChecked = checkedState === 'checked'
-  const isIndeterminate = checkedState === 'indeterminate'
-  const isUnchecked = checkedState === 'unchecked'
 
   useEffect(() => {
     const snapshot = actorRef.getSnapshot()
@@ -48,5 +46,31 @@ export const useCheckbox = (props: Context) => {
   return {
     state,
     actorRef,
+    indicatorProps: {
+      type: 'button',
+      tabIndex: 0,
+      onKeyDown(ev) {
+        if (ev.key === 'Enter') {
+          ev.preventDefault()
+        }
+      },
+      onClick() {
+        send({ type: 'CHECK' })
+      },
+    } as React.ComponentProps<'button'>,
+    inputProps: {
+      id,
+      name,
+      type: 'checkbox',
+      tabIndex: -1,
+      'aria-hidden': true,
+      onChange(ev) {
+        if (ev.target.indeterminate) {
+          send({ type: 'INPUT.CHECK', value: 'indeterminate' })
+        } else {
+          send({ type: 'INPUT.CHECK', value: ev.target.checked ? 'checked' : 'unchecked' })
+        }
+      },
+    } as React.ComponentProps<'input'>,
   }
 }

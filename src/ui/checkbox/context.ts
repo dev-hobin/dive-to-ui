@@ -1,5 +1,6 @@
 import { createContext } from 'react'
-import { ActorRefFrom } from 'xstate'
-import { machine } from '@/machines/checkbox'
+import { UseCheckboxReturn } from './use-checkbox'
 
-export const MachineContext = createContext<ActorRefFrom<typeof machine> | null>(null)
+type CheckboxContextType = UseCheckboxReturn
+
+export const CheckboxContext = createContext<CheckboxContextType | null>(null)

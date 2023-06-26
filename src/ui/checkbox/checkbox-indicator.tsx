@@ -1,26 +1,14 @@
+import { useContext } from 'react'
 import { Dive } from '@/core/dive'
 import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
-import { useContext } from 'react'
-import { MachineContext } from './context'
+import { CheckboxContext } from './context'
+import { mergeProps } from '@/utils/merge-props'
 
 export const Indicator = forwardRefWithAsChild<'button'>((props, ref) => {
-  const actorRef = useContext(MachineContext)!
-  const send = actorRef.send
+  const { indicatorProps } = useContext(CheckboxContext)!
+  const mergedProps = mergeProps(props, indicatorProps)
 
-  return (
-    <Dive.button
-      type="button"
-      tabIndex={0}
-      onKeyDown={(ev) => {
-        if (ev.key === 'Enter') {
-          ev.preventDefault()
-        }
-      }}
-      onClick={(ev) => send({ type: 'CHECK' })}
-      {...props}
-      ref={ref}
-    />
-  )
+  return <Dive.button {...mergedProps} ref={ref} />
 })
 
 Indicator.displayName = 'Checkbox.Indicator'

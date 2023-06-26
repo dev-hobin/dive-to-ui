@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from 'react'
 import { useActor } from '@xstate/react'
 import { machine } from '@/machines/checkbox'
-import { MachineContext } from './context'
+import { CheckboxContext } from './context'
 import { CheckedState } from '@/machines/checkbox/checkbox.machine'
 import { useCheckbox } from './use-checkbox'
 
@@ -13,7 +13,7 @@ type RootProps = {
   onChange?: (checked: CheckedState) => void
 }
 export const Root = (props: RootProps) => {
-  const { state, actorRef } = useCheckbox({
+  const checkbox = useCheckbox({
     id: props.id,
     name: props.name,
     checkedState: getCheckedState(props.checked),
@@ -21,10 +21,12 @@ export const Root = (props: RootProps) => {
   })
 
   return (
-    <MachineContext.Provider value={actorRef}>
-      <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre>
+    <CheckboxContext.Provider value={checkbox}>
+      <pre>
+        {JSON.stringify({ value: checkbox.state.value, context: checkbox.state.context }, null, 2)}
+      </pre>
       {props.children}
-    </MachineContext.Provider>
+    </CheckboxContext.Provider>
   )
 }
 
