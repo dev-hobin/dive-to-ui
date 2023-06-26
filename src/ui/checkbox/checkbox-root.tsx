@@ -53,7 +53,7 @@ export const Root = (props: RootProps) => {
 
   return (
     <MachineContext.Provider value={actorRef}>
-      <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre>
+      {/* <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre> */}
       {children}
     </MachineContext.Provider>
   )
@@ -66,3 +66,5 @@ const getCheckedState = (checked: RootProps['checked']): CheckedState => {
   }
   return checked
 }
+
+Root.displayName = 'Checkbox.Root'

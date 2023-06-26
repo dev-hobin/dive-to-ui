@@ -80,10 +80,18 @@ export const machine = createMachine(
           inputProto,
           'checked',
         ) as PropertyDescriptor
+        const indeterminateDescriptor = Object.getOwnPropertyDescriptor(
+          inputProto,
+          'indeterminate',
+        ) as PropertyDescriptor
         const setChecked = descriptor.set
+        const setIndeterminate = indeterminateDescriptor.set
 
         if (!setChecked) return
+        if (!setIndeterminate) return
+
         setChecked.call(inputEl, isChecked(checkedState))
+        setIndeterminate.call(inputEl, isIndeterminate(checkedState))
         const ev = new Event('click', { bubbles: true })
         inputEl.dispatchEvent(ev)
       },

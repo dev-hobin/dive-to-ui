@@ -22,3 +22,5 @@ export const Indicator = forwardRefWithAsChild<'button'>((props, ref) => {
     />
   )
 })
+
+Indicator.displayName = 'Checkbox.Indicator'
