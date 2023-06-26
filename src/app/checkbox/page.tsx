@@ -27,7 +27,7 @@ export default function CheckboxPage() {
           id="checkbox-id"
           name="checkbox-name"
           checked={checked}
-          onChange={setChecked}
+          // onChange={setChecked}
         >
           <Checkbox.Indicator>체크박스</Checkbox.Indicator>
           <label htmlFor="checkbox-id">라벨</label>

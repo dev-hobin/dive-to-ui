@@ -13,48 +13,17 @@ type RootProps = {
   onChange?: (checked: CheckedState) => void
 }
 export const Root = (props: RootProps) => {
-  const { id, name, children, checked, onChange } = props
-
-  const [state, send, actorRef] = useActor(machine, {
-    input: {
-      id: id,
-      name: name,
-      checked: getCheckedState(checked),
-      onCheckedChange: onChange,
-    },
+  const { state, actorRef } = useCheckbox({
+    id: props.id,
+    name: props.name,
+    checkedState: getCheckedState(props.checked),
+    onCheckedChange: props.onChange,
   })
-
-  useEffect(() => {
-    const snapshot = actorRef.getSnapshot()
-    if (!snapshot) return
-
-    const nextChecked = getCheckedState(checked)
-    if (snapshot.context.checkedState !== nextChecked) {
-      send({ type: 'CHECKED.SET', value: nextChecked })
-    }
-  }, [actorRef, checked, send])
-
-  useEffect(() => {
-    if (id === undefined) return
-    send({ type: 'CONTEXT.SET', context: { id } })
-  }, [id, send])
-
-  useEffect(() => {
-    if (name === undefined) return
-    send({ type: 'CONTEXT.SET', context: { name } })
-  }, [name, send])
-
-  useEffect(() => {
-    if (onChange === undefined) return
-    send({ type: 'CONTEXT.SET', context: { onCheckedChange: onChange } })
-  }, [onChange, send])
-
-  const {} = useCheckbox(state, send)
 
   return (
     <MachineContext.Provider value={actorRef}>
-      {/* <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre> */}
-      {children}
+      <pre>{JSON.stringify({ value: state.value, context: state.context }, null, 2)}</pre>
+      {props.children}
     </MachineContext.Provider>
   )
 }

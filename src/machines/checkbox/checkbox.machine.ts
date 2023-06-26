@@ -2,7 +2,7 @@ import { assign, createMachine } from 'xstate'
 
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
-type Context = {
+export type Context = {
   id: string
   name: string | undefined
   checkedState: CheckedState
