@@ -3,20 +3,28 @@ import { machine } from '@/machines/checkbox'
 import { Context } from '@/machines/checkbox/checkbox.machine'
 import { useEffect } from 'react'
 
-export type UseCheckboxReturn = ReturnType<typeof useCheckbox>
+export type UseCheckboxReturn = {
+  indicatorProps: React.ComponentProps<'button'>
+  inputProps: React.ComponentProps<'input'>
+}
 
-export const useCheckbox = (props: Context) => {
+export const useCheckbox = (props: Partial<Context>): UseCheckboxReturn => {
   const [state, send, actorRef] = useActor(machine, {
     input: {
       id: props.id,
       name: props.name,
-      checked: props.checkedState,
+      checkedState: props.checkedState,
       onCheckedChange: props.onCheckedChange,
+      value: props.value,
+      disabled: props.disabled,
+      required: props.required,
     },
   })
 
   const id = state.context.id
   const name = state.context.name
+  const isDisabled = state.context.disabled
+  const isRequired = state.context.required
 
   useEffect(() => {
     const snapshot = actorRef.getSnapshot()
@@ -25,6 +33,7 @@ export const useCheckbox = (props: Context) => {
     const nextCheckedState = props.checkedState
     if (snapshot.context.checkedState !== nextCheckedState) {
       send({ type: 'CHECKED.SET', value: nextCheckedState })
+      send({ type: 'CHECKED.SET', value: nextCheckedState ?? 'unchecked' })
     }
   }, [actorRef, props.checkedState, send])
 
@@ -44,11 +53,11 @@ export const useCheckbox = (props: Context) => {
   }, [props.onCheckedChange, send])
 
   return {
-    state,
-    actorRef,
     indicatorProps: {
       type: 'button',
       tabIndex: 0,
+      disabled: isDisabled,
+
       onKeyDown(ev) {
         if (ev.key === 'Enter') {
           ev.preventDefault()
@@ -57,13 +66,16 @@ export const useCheckbox = (props: Context) => {
       onClick() {
         send({ type: 'CHECK' })
       },
-    } as React.ComponentProps<'button'>,
+    },
     inputProps: {
       id,
       name,
       type: 'checkbox',
       tabIndex: -1,
       'aria-hidden': true,
+      disabled: isDisabled,
+      required: isRequired,
+
       onChange(ev) {
         if (ev.target.indeterminate) {
           send({ type: 'INPUT.CHECK', value: 'indeterminate' })
@@ -71,6 +83,6 @@ export const useCheckbox = (props: Context) => {
           send({ type: 'INPUT.CHECK', value: ev.target.checked ? 'checked' : 'unchecked' })
         }
       },
-    } as React.ComponentProps<'input'>,
+    },
   }
 }

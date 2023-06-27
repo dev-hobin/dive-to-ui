@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate'
+import { assign, createMachine, not } from 'xstate'
 
 export type CheckedState = 'unchecked' | 'checked' | 'indeterminate'
 
@@ -7,6 +7,9 @@ export type Context = {
   name: string | undefined
   checkedState: CheckedState
   onCheckedChange?: (checkedState: CheckedState) => void
+  value: string
+  disabled: boolean
+  required: boolean
 }
 
 export const machine = createMachine(
@@ -15,14 +18,19 @@ export const machine = createMachine(
     initial: 'idle',
     states: {
       idle: {
+        entry: 'syncInputState',
+        //@ts-ignore
         on: {
           CHECK: {
-            actions: ['updateCheckedState', 'dispatchChange', 'syncInputState', 'invokeOnChange'],
+            guard: not('isDisabled'),
+            actions: ['updateCheckedState', 'syncInputState', 'invokeOnChange'],
           },
           'INPUT.CHECK': {
+            guard: not('isDisabled'),
             actions: ['setCheckedState', 'invokeOnChange'],
           },
           'CHECKED.SET': {
+            guard: not('isDisabled'),
             actions: ['setCheckedState', 'dispatchChange', 'syncInputState'],
           },
           'CONTEXT.SET': {
@@ -44,9 +52,15 @@ export const machine = createMachine(
       name: input?.name ?? undefined,
       checkedState: input?.checkedState ?? 'unchecked',
       onCheckedChange: input?.onCheckedChange,
+      value: input?.value ?? 'on',
+      disabled: input?.disabled ?? false,
+      required: input?.required ?? false,
     }),
   },
   {
+    guards: {
+      isDisabled: ({ context }) => context.disabled,
+    },
     actions: {
       updateCheckedState: assign(({ context }) => {
         console.log('updateCheckedState', context)
@@ -70,7 +84,6 @@ export const machine = createMachine(
         inputEl.indeterminate = isIndeterminate(checkedState)
       },
       dispatchChange: ({ context }) => {
-        console.log('dispatchChange')
         const { id, checkedState } = context
         const inputEl = document.getElementById(id) as HTMLInputElement | null
         if (!inputEl) return
@@ -96,9 +109,9 @@ export const machine = createMachine(
         inputEl.dispatchEvent(ev)
       },
       setCheckedState: assign(({ context, event }) => {
-        console.log('setCheckedState')
         if (event.type !== 'INPUT.CHECK' && event.type !== 'CHECKED.SET') return {}
         if (context.checkedState === event.value) return {}
+        console.log('setCheckedState')
         return { checkedState: event.value }
       }),
       invokeOnChange: ({ context }) => {
