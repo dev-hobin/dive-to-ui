@@ -7,7 +7,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const { inputProps } = useContext(CheckboxContext)!
   const mergedProps = mergeProps(inputProps, props)
 
-  return <input {...mergedProps} ref={ref} />
+  return <input type="checkbox" {...mergedProps} ref={ref} />
 })
 
 Input.displayName = 'Checkbox.Input'
