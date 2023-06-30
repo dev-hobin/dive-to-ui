@@ -9,7 +9,6 @@ type CheckboxType = typeof Checkbox.Root
 const meta: Meta<CheckboxType> = {
   title: 'Component/Checkbox',
   component: Checkbox.Root,
-  tags: ['autodocs'],
 }
 
 export default meta
@@ -17,7 +16,7 @@ export default meta
 export const Uncontrolled = () => {
   return (
     <Checkbox.Root id="uncontrolled" defaultChecked>
-      <Checkbox.Indicator />
+      <Checkbox.Indicator>indicator</Checkbox.Indicator>
       <Checkbox.Input />
     </Checkbox.Root>
   )
@@ -27,8 +26,8 @@ export const Controlled = () => {
   const [checked, setChecked] = useState<CheckedState>('unchecked')
 
   return (
-    <Checkbox.Root id="controlled" checked={checked} onChange={setChecked}>
-      <Checkbox.Indicator />
+    <Checkbox.Root id="controlled" checked={checked} name="hi" onChange={setChecked}>
+      <Checkbox.Indicator>indicator</Checkbox.Indicator>
       <Checkbox.Input />
     </Checkbox.Root>
   )
@@ -37,7 +36,7 @@ export const Controlled = () => {
 export const Disabled = () => {
   return (
     <Checkbox.Root id="disabled" disabled>
-      <Checkbox.Indicator />
+      <Checkbox.Indicator>indicator</Checkbox.Indicator>
       <Checkbox.Input />
     </Checkbox.Root>
   )

@@ -23,7 +23,7 @@ export const machine = createMachine(
         on: {
           CHECK: {
             guard: not('isDisabled'),
-            actions: ['updateCheckedState', 'syncInputState', 'invokeOnChange'],
+            actions: ['updateCheckedState', 'dispatchChange', 'syncInputState', 'invokeOnChange'],
           },
           'INPUT.CHECK': {
             guard: not('isDisabled'),
@@ -107,6 +107,7 @@ export const machine = createMachine(
         setIndeterminate.call(inputEl, isIndeterminate(checkedState))
         const ev = new Event('click', { bubbles: true })
         inputEl.dispatchEvent(ev)
+        console.log('dispatchChange')
       },
       setCheckedState: assign(({ context, event }) => {
         if (event.type !== 'INPUT.CHECK' && event.type !== 'CHECKED.SET') return {}

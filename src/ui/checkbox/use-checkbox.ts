@@ -32,7 +32,6 @@ export const useCheckbox = (props: Partial<Context>): UseCheckboxReturn => {
 
     const nextCheckedState = props.checkedState
     if (snapshot.context.checkedState !== nextCheckedState) {
-      send({ type: 'CHECKED.SET', value: nextCheckedState })
       send({ type: 'CHECKED.SET', value: nextCheckedState ?? 'unchecked' })
     }
   }, [actorRef, props.checkedState, send])
