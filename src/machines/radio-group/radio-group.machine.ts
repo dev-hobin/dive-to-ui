@@ -1,4 +1,6 @@
-import { createMachine, assign } from 'xstate'
+import { createMachine } from 'xstate'
+
+export type MachineContext = {}
 
 export const machine = createMachine({
   id: 'RadioGroup',
@@ -7,7 +9,7 @@ export const machine = createMachine({
     idle: {},
   },
   types: {
-    context: {} as any,
+    context: {} as MachineContext,
     events: {} as any,
   },
 })
