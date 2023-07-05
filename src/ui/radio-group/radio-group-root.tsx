@@ -6,15 +6,16 @@ import { Dive } from '@/core/dive'
 
 type RootProps = {
   children?: ReactNode
+  name?: string
 }
 export const Root = forwardRefWithAsChild<'div', RootProps>((props, ref) => {
-  const radioGroup = useRadioGroup({})
+  const radioGroup = useRadioGroup({
+    name: props.name,
+  })
 
   return (
     <RadioGroupContext.Provider value={radioGroup}>
-      <Dive.div role="radiogroup" {...props} ref={ref}>
-        {props.children}
-      </Dive.div>
+      <Dive.div role="radiogroup" {...props} ref={ref} />
     </RadioGroupContext.Provider>
   )
 })

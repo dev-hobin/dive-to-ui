@@ -1,6 +1,8 @@
 import { createMachine } from 'xstate'
 
-export type MachineContext = {}
+export type MachineContext = {
+  name: string | undefined
+}
 
 export const machine = createMachine({
   id: 'RadioGroup',
@@ -12,4 +14,7 @@ export const machine = createMachine({
     context: {} as MachineContext,
     events: {} as any,
   },
+  context: ({ input }) => ({
+    name: input.name,
+  }),
 })
