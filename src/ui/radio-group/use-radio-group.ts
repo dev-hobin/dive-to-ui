@@ -20,6 +20,9 @@ export const useRadioGroup = (props: Partial<MachineContext>): UseRadioGroupRetu
       onFocus(ev) {
         send({ type: 'ITEM.FOCUS', value: ev.target.value })
       },
+      onChange(ev) {
+        send({ type: 'ITEM.SELECT', value: ev.target.value })
+      },
     },
   }
 }
