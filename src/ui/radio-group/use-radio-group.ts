@@ -12,9 +12,14 @@ export const useRadioGroup = (props: Partial<MachineContext>): UseRadioGroupRetu
     },
   })
 
+  console.log(state.context)
+
   return {
     inputProps: {
       name: state.context.name,
+      onFocus(ev) {
+        send({ type: 'ITEM.FOCUS', value: ev.target.value })
+      },
     },
   }
 }
