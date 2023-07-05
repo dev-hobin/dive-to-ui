@@ -1,13 +1,15 @@
-import { forwardRef, InputHTMLAttributes, useContext } from 'react'
+import { useContext } from 'react'
 import { RadioGroupContext } from './context'
+import { Dive } from '@/core/dive'
+import { forwardRefWithAsChild } from '@/utils/forward-ref-with-as-child'
 import { mergeProps } from '@/utils/merge-props'
 
-type InputProps = InputHTMLAttributes<HTMLInputElement>
-export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
-  const { inputProps } = useContext(RadioGroupContext)!
+type InputProps = { value: string }
+export const Input = forwardRefWithAsChild<'input', InputProps>((props, ref) => {
+  const { getInputProps } = useContext(RadioGroupContext)!
 
-  const mergedProps = mergeProps(inputProps, props)
-  return <input type="radio" {...mergedProps} ref={ref} />
+  const mergedProps = mergeProps(getInputProps(props.value), props)
+  return <Dive.input {...mergedProps} ref={ref} />
 })
 
 Input.displayName = 'RadioGroup.Input'

@@ -1,8 +1,9 @@
 import { useActor } from '@xstate/react'
 import { machine, type MachineContext } from '@/machines/radio-group'
+import { useCallback } from 'react'
 
 export type UseRadioGroupReturn = {
-  inputProps: React.ComponentProps<'input'>
+  getInputProps: (value: string) => React.ComponentProps<'input'>
 }
 
 export const useRadioGroup = (props: Partial<MachineContext>): UseRadioGroupReturn => {
@@ -15,14 +16,20 @@ export const useRadioGroup = (props: Partial<MachineContext>): UseRadioGroupRetu
   console.log(state.context)
 
   return {
-    inputProps: {
-      name: state.context.name,
-      onFocus(ev) {
-        send({ type: 'ITEM.FOCUS', value: ev.target.value })
-      },
-      onChange(ev) {
-        send({ type: 'ITEM.SELECT', value: ev.target.value })
-      },
+    getInputProps(value) {
+      return {
+        type: 'radio',
+        name: state.context.name,
+        value: value,
+        onFocus(ev) {
+          send({ type: 'ITEM.FOCUS', value: ev.target.value })
+        },
+        onChange(ev) {
+          if (ev.target.checked) {
+            send({ type: 'ITEM.SELECT', value: ev.target.value })
+          }
+        },
+      }
     },
   }
 }
